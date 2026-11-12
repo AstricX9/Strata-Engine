@@ -163,7 +163,8 @@ Other schemes remain selectable.
 
 ## Testing
 
-- Doctest (`scons tests=yes`, `tests/editor/`):
+- Doctest (`scons tests=yes`, new `tests/strata/` dir, guarded by `TOOLS_ENABLED` like
+  `tests/scene/test_node.cpp`):
   - each Place Actors item builds a non-null tree whose root is the expected class;
   - `strata_layout` default config places each dock in its intended slot.
 - Visual check per milestone: launch editor, compare against reference screenshots.
