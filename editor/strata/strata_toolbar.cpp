@@ -79,16 +79,16 @@ Ref<DPITexture> StrataToolbar::make_toolbar_icon(const Ref<Texture2D> &p_icon) {
 
 Vector<StrataToolbar::ButtonInfo> StrataToolbar::get_buttons() {
 	return {
-		{ SAVE_CURRENT, TTRC("Save Current"), "Save", false, false },
-		{ SOURCE_CONTROL, TTRC("Source Control"), "VcsBranches", true, true },
-		{ CONTENT, TTRC("Content"), "Folder", false, true },
-		{ MARKETPLACE, TTRC("Marketplace"), "AssetStore", false, false },
-		{ SETTINGS, TTRC("Settings"), "Tools", true, true },
-		{ BLUEPRINTS, TTRC("Blueprints"), "Script", true, true },
-		{ CINEMATICS, TTRC("Cinematics"), "Animation", true, false },
-		{ BUILD, TTRC("Build"), "Bake", true, true },
-		{ PLAY, TTRC("Play"), "Play", true, true },
-		{ LAUNCH, TTRC("Launch"), "PlayRemote", true, true },
+		{ SAVE_CURRENT, TTRC("Save Current"), "StrataSave", false, false },
+		{ SOURCE_CONTROL, TTRC("Source Control"), "StrataSourceControl", true, true },
+		{ CONTENT, TTRC("Content"), "StrataContent", false, true },
+		{ MARKETPLACE, TTRC("Marketplace"), "StrataMarketplace", false, false },
+		{ SETTINGS, TTRC("Settings"), "StrataSettings", true, true },
+		{ BLUEPRINTS, TTRC("Blueprints"), "StrataBlueprints", true, true },
+		{ CINEMATICS, TTRC("Cinematics"), "StrataCinematics", true, false },
+		{ BUILD, TTRC("Build"), "StrataBuild", true, true },
+		{ PLAY, TTRC("Play"), "StrataPlay", true, true },
+		{ LAUNCH, TTRC("Launch"), "StrataLaunch", true, true },
 	};
 }
 

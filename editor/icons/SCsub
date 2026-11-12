@@ -9,6 +9,7 @@ import editor_icons_builders
 
 # Editor's own icons
 icon_sources = Glob("*.svg")
+icon_sources += Glob("strata/*.svg")  # Strata toolbar icons (Lucide, ISC).
 
 # Module icons
 for path in env.module_icons_paths:

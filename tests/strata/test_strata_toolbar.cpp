@@ -44,7 +44,7 @@ namespace TestStrataToolbar {
 TEST_CASE("[Strata][Toolbar] Buttons follow UE4's level editor toolbar") {
 	const Vector<StrataToolbar::ButtonInfo> buttons = StrataToolbar::get_buttons();
 	const char *labels[] = { "Save Current", "Source Control", "Content", "Marketplace", "Settings", "Blueprints", "Cinematics", "Build", "Play", "Launch" };
-	const char *icons[] = { "Save", "VcsBranches", "Folder", "AssetStore", "Tools", "Script", "Animation", "Bake", "Play", "PlayRemote" };
+	const char *icons[] = { "StrataSave", "StrataSourceControl", "StrataContent", "StrataMarketplace", "StrataSettings", "StrataBlueprints", "StrataCinematics", "StrataBuild", "StrataPlay", "StrataLaunch" };
 	const bool dropdowns[] = { false, true, false, false, true, true, true, true, true, true };
 	REQUIRE(buttons.size() == 10);
 	for (int i = 0; i < 10; i++) {
