@@ -64,8 +64,7 @@ void OpenXRActionMapEditor::_bind_methods() {
 void OpenXRActionMapEditor::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			const String theme_style = EDITOR_GET("interface/theme/style");
-			tabs->set_theme_type_variation(theme_style == "Classic" ? "TabContainerOdd" : "TabContainerInner");
+			tabs->set_theme_type_variation("TabContainerInner");
 
 			for (int i = 0; i < tabs->get_child_count(); i++) {
 				Control *tab = Object::cast_to<Control>(tabs->get_child(i));

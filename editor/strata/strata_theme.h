@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  theme_classic.h                                                       */
+/*  strata_theme.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -32,9 +32,21 @@
 
 #include "editor/themes/editor_theme_manager.h"
 
-class ThemeClassic {
+// Strata's own default look: preset values feeding Godot's theme generator, plus overrides applied after it.
+struct StrataThemePreset {
+	Color base_color;
+	Color accent_color;
+	float contrast = 0.0;
+	float icon_saturation = 0.0;
+	int corner_radius = 0;
+	int base_spacing = 0;
+	int extra_spacing = 0;
+	Size2 dialogs_buttons_min_size;
+	int main_font_size = 0;
+};
+
+class StrataTheme {
 public:
-	static void populate_shared_styles(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config);
-	static void populate_standard_styles(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config);
-	static void populate_editor_styles(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config);
+	static StrataThemePreset get_default_preset();
+	static void populate_overrides(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config);
 };

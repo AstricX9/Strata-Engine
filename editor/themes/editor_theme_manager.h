@@ -53,7 +53,6 @@ public:
 	struct ThemeConfiguration {
 		// Basic properties.
 
-		String style;
 		String preset;
 		String spacing_preset;
 
@@ -85,7 +84,7 @@ public:
 		const float default_icon_saturation = 2.0;
 		const int default_relationship_lines = RELATIONSHIP_SELECTED_ONLY;
 		const float default_contrast = 0.3;
-		const int default_corner_radius = 4;
+		const int default_corner_radius = 2;
 
 		// Generated properties.
 
