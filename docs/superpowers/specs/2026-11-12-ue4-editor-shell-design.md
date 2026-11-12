@@ -204,8 +204,18 @@ the user's 4.26 reference screenshot):
 - **New Project Categories**: list rows (icon, bold title, one-line description). Strata
   ships only **Games** at first; choosing it opens the template step: template tiles
   (Blank, First Person, Third Person, Top Down — shipped as small Strata template projects),
-  then settings row (renderer: Forward+/Mobile/Compatibility in place of UE4's quality
-  presets; with/without Starter Content), folder + name, Create.
+  Next.
+- **Project Settings** page (UE4.26 layout): two columns of setting tiles, each a large
+  icon button with a ▾ dropdown and a one-line description beside it:
+  - **Quality**: Maximum Quality = Forward+, Scalable = Compatibility.
+  - **Target Hardware**: Desktop / Console or Mobile / Tablet (Mobile picks the Mobile
+    renderer and enables ETC2/ASTC texture import). Description notes it can be changed
+    later in Project Settings.
+  - **Starter Content**: With / No Starter Content.
+  - UE4's Blueprint/C++ tile waits for Phase 2 (Blueprints); its raytracing tile is
+    omitted (no Godot equivalent).
+  - Below: "Select a location for your project to be stored." with Folder (with … browse)
+    and Name fields; footer **Back**, **Create Project** (primary), **Cancel**.
 - Footer: **Open Project** (primary button) and **Cancel**.
 - Existing Godot Project Manager features (import, scan, rename, remove, tags, version
   control init) stay available under a "More ▾" menu.
