@@ -59,6 +59,9 @@ TEST_CASE("[SceneTree][Strata][Build] Bake targets are found anywhere in the lev
 	group->add_child(nav);
 	LightmapGI *lightmap = memnew(LightmapGI);
 	root->add_child(lightmap);
+	for (Node *node : { (Node *)voxel_gi, (Node *)group, (Node *)nav, (Node *)lightmap }) {
+		node->set_owner(root);
+	}
 
 	const StrataBakeTargets targets = StrataBuild::collect_targets(root);
 	REQUIRE(targets.voxel_gis.size() == 1);
@@ -73,7 +76,9 @@ TEST_CASE("[SceneTree][Strata][Build] Bake targets are found anywhere in the lev
 
 TEST_CASE("[SceneTree][Strata][Build] Lightmap save path follows the level file") {
 	LightmapGI *lightmap = memnew(LightmapGI);
-	CHECK(StrataBuild::lightmap_save_path(lightmap, "res://levels/arena.tscn") == "res://levels/arena.lmbake");
+	lightmap->set_name("Sun");
+	// The node name keeps two un-baked lightmaps in one level from writing the same file.
+	CHECK(StrataBuild::lightmap_save_path(lightmap, "res://levels/arena.tscn") == "res://levels/arena_Sun.lmbake");
 	memdelete(lightmap);
 }
 
@@ -81,6 +86,25 @@ TEST_CASE("[SceneTree][Strata][Build] Unsaved level has no lightmap save path") 
 	LightmapGI *lightmap = memnew(LightmapGI);
 	CHECK(StrataBuild::lightmap_save_path(lightmap, "") == "");
 	memdelete(lightmap);
+}
+
+TEST_CASE("[SceneTree][Strata][Build] Nodes inside instanced sub-scenes are not baked") {
+	Node3D *root = memnew(Node3D);
+	Node3D *house = memnew(Node3D); // Stands in for an instanced sub-scene root.
+	root->add_child(house);
+	house->set_owner(root);
+	VoxelGI *house_gi = memnew(VoxelGI);
+	house->add_child(house_gi);
+	house_gi->set_owner(house);
+
+	CHECK(StrataBuild::collect_targets(root).voxel_gis.is_empty());
+	memdelete(root);
+}
+
+TEST_CASE("[Strata][Build] Bake data owned by another scene is foreign") {
+	CHECK(StrataBuild::is_foreign_data("res://house.tscn::LightmapGIData_abc", "res://level.tscn"));
+	CHECK_FALSE(StrataBuild::is_foreign_data("res://level.tscn::LightmapGIData_abc", "res://level.tscn"));
+	CHECK_FALSE(StrataBuild::is_foreign_data("", "res://level.tscn"));
 }
 
 } // namespace TestStrataBuild

@@ -30,29 +30,33 @@
 
 #include "strata_build.h"
 
+#include "core/io/file_access.h"
 #include "core/os/os.h"
 #include "editor/editor_node.h"
 #include "scene/3d/lightmap_gi.h"
 #include "scene/3d/navigation/navigation_region_3d.h"
 #include "scene/3d/voxel_gi.h"
 
-static void _collect(Node *p_node, StrataBakeTargets &r_targets) {
-	if (LightmapGI *lightmap = Object::cast_to<LightmapGI>(p_node)) {
-		r_targets.lightmaps.push_back(lightmap);
-	} else if (VoxelGI *voxel_gi = Object::cast_to<VoxelGI>(p_node)) {
-		r_targets.voxel_gis.push_back(voxel_gi);
-	} else if (NavigationRegion3D *nav = Object::cast_to<NavigationRegion3D>(p_node)) {
-		r_targets.nav_regions.push_back(nav);
+static void _collect(Node *p_node, Node *p_root, StrataBakeTargets &r_targets) {
+	// Only the level's own nodes: instanced sub-scenes keep their baked data.
+	if (p_node == p_root || p_node->get_owner() == p_root) {
+		if (LightmapGI *lightmap = Object::cast_to<LightmapGI>(p_node)) {
+			r_targets.lightmaps.push_back(lightmap);
+		} else if (VoxelGI *voxel_gi = Object::cast_to<VoxelGI>(p_node)) {
+			r_targets.voxel_gis.push_back(voxel_gi);
+		} else if (NavigationRegion3D *nav = Object::cast_to<NavigationRegion3D>(p_node)) {
+			r_targets.nav_regions.push_back(nav);
+		}
 	}
 	for (int i = 0; i < p_node->get_child_count(); i++) {
-		_collect(p_node->get_child(i), r_targets);
+		_collect(p_node->get_child(i), p_root, r_targets);
 	}
 }
 
 StrataBakeTargets StrataBuild::collect_targets(Node *p_level_root) {
 	StrataBakeTargets targets;
 	if (p_level_root) {
-		_collect(p_level_root, targets);
+		_collect(p_level_root, p_level_root, targets);
 	}
 	return targets;
 }
@@ -62,7 +66,19 @@ String StrataBuild::lightmap_save_path(const LightmapGI *p_lightmap, const Strin
 	if (data.is_valid() && data->get_path().is_resource_file()) {
 		return data->get_path();
 	}
-	return p_level_path.is_empty() ? String() : p_level_path.get_basename() + ".lmbake";
+	return p_level_path.is_empty() ? String() : p_level_path.get_basename() + "_" + String(p_lightmap->get_name()) + ".lmbake";
+}
+
+// Same rule as the LightmapGI/VoxelGI editor plugins: never rebake data that belongs to another scene or an imported file.
+bool StrataBuild::is_foreign_data(const String &p_data_path, const String &p_level_path) {
+	if (p_data_path.is_empty()) {
+		return false;
+	}
+	const int sub_resource = p_data_path.find("::");
+	if (sub_resource != -1) {
+		return p_data_path.substr(0, sub_resource) != p_level_path;
+	}
+	return FileAccess::exists(p_data_path + ".import");
 }
 
 static EditorProgress *lightmap_progress = nullptr;
@@ -81,11 +97,20 @@ static void _report_failure(Node *p_node, const String &p_reason) {
 void StrataBuild::build_all(Node *p_level_root, bool p_lighting, bool p_navigation) {
 	const StrataBakeTargets targets = collect_targets(p_level_root);
 	if (p_lighting) {
+		const String level_path = p_level_root->get_scene_file_path();
 		for (VoxelGI *voxel_gi : targets.voxel_gis) {
+			if (voxel_gi->get_probe_data().is_valid() && is_foreign_data(voxel_gi->get_probe_data()->get_path(), level_path)) {
+				_report_failure(voxel_gi, TTR("its data belongs to another scene or an imported file"));
+				continue;
+			}
 			voxel_gi->bake();
 		}
 		for (LightmapGI *lightmap : targets.lightmaps) {
-			const String path = lightmap_save_path(lightmap, p_level_root->get_scene_file_path());
+			if (lightmap->get_light_data().is_valid() && is_foreign_data(lightmap->get_light_data()->get_path(), level_path)) {
+				_report_failure(lightmap, TTR("its data belongs to another scene or an imported file"));
+				continue;
+			}
+			const String path = lightmap_save_path(lightmap, level_path);
 			if (path.is_empty()) {
 				_report_failure(lightmap, TTR("save the level first"));
 				continue;

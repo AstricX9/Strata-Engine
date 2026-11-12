@@ -30,6 +30,7 @@
 
 #include "strata_toolbar.h"
 
+#include "core/config/engine.h"
 #include "core/object/callable_mp.h"
 #include "editor/animation/animation_player_editor_plugin.h"
 #include "editor/docks/editor_dock_manager.h"
@@ -163,7 +164,6 @@ void StrataToolbar::_menu_item_pressed(int p_item) {
 
 void StrataToolbar::_update_menu(int p_id) {
 	EditorNode *editor = EditorNode::get_singleton();
-	const bool has_level = editor->get_edited_scene() != nullptr;
 	PopupMenu *popup = _get_menu_button(ButtonId(p_id))->get_popup();
 	switch (p_id) {
 		case BLUEPRINTS: {
@@ -172,7 +172,6 @@ void StrataToolbar::_update_menu(int p_id) {
 			popup->set_item_disabled(popup->get_item_index(BLUEPRINTS_EXTEND), !has_selection);
 		} break;
 		case PLAY:
-			popup->set_item_disabled(popup->get_item_index(PLAY_CURRENT), !has_level);
 			popup->set_item_checked(popup->get_item_index(PLAY_MOVIE_MAKER), EditorRunBar::get_singleton()->is_movie_maker_enabled());
 			break;
 		default:
@@ -182,9 +181,10 @@ void StrataToolbar::_update_menu(int p_id) {
 
 void StrataToolbar::_update_enabled() {
 	const bool has_level = EditorNode::get_singleton()->get_edited_scene() != nullptr;
-	for (ButtonId id : { SAVE_CURRENT, CINEMATICS, BUILD, PLAY }) {
+	for (ButtonId id : { SAVE_CURRENT, CINEMATICS, BUILD }) {
 		buttons[id]->set_disabled(!has_level);
 	}
+	buttons[PLAY]->set_disabled(!has_level || Engine::get_singleton()->is_recovery_mode_hint());
 	buttons[MARKETPLACE]->set_disabled(!EditorNode::get_editor_main_screen()->is_button_enabled(EditorMainScreen::EDITOR_ASSETLIB));
 }
 
@@ -192,6 +192,8 @@ void StrataToolbar::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_READY: {
 			EditorNode::get_singleton()->connect("scene_changed", callable_mp(this, &StrataToolbar::_update_enabled));
+			// Creating or deleting the level root goes through undo/redo without scene_changed.
+			EditorUndoRedoManager::get_singleton()->connect("version_changed", callable_mp(this, &StrataToolbar::_update_enabled));
 			_update_enabled();
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
@@ -270,10 +272,17 @@ StrataToolbar::StrataToolbar() {
 
 	// Item shortcuts keep Godot's F5/F6 working: the MenuButton forwards them while the toolbar is visible.
 	menu = _add_menu(PLAY);
-	menu->add_shortcut(ED_GET_SHORTCUT("editor/run_current_scene"), PLAY_CURRENT);
-	menu->set_item_text(menu->get_item_count() - 1, TTRC("Play Current Level"));
-	menu->add_shortcut(ED_GET_SHORTCUT("editor/run_project"), PLAY_MAIN);
-	menu->set_item_text(menu->get_item_count() - 1, TTRC("Play Main Level"));
+	if (Engine::get_singleton()->is_recovery_mode_hint()) {
+		// Recovery Mode cannot run the project and registers no run shortcuts.
+		play_options->set_disabled(true);
+		menu->add_item(TTRC("Play Current Level"), PLAY_CURRENT);
+		menu->add_item(TTRC("Play Main Level"), PLAY_MAIN);
+	} else {
+		menu->add_shortcut(ED_GET_SHORTCUT("editor/run_current_scene"), PLAY_CURRENT);
+		menu->set_item_text(menu->get_item_count() - 1, TTRC("Play Current Level"));
+		menu->add_shortcut(ED_GET_SHORTCUT("editor/run_project"), PLAY_MAIN);
+		menu->set_item_text(menu->get_item_count() - 1, TTRC("Play Main Level"));
+	}
 	menu->add_separator();
 	menu->add_check_item(TTRC("Movie Maker Mode"), PLAY_MOVIE_MAKER);
 

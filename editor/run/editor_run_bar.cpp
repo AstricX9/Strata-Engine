@@ -520,6 +520,9 @@ void EditorRunBar::set_movie_maker_enabled(bool p_enabled) {
 }
 
 void EditorRunBar::set_play_buttons_visible(bool p_visible) {
+	if (!play_button) {
+		return; // Recovery Mode builds no play buttons.
+	}
 	play_button->set_visible(p_visible);
 	play_scene_button->set_visible(p_visible);
 	play_custom_scene_button->set_visible(p_visible);

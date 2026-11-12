@@ -34,6 +34,8 @@ TEST_FORCE_LINK(test_strata_toolbar)
 
 #ifdef TOOLS_ENABLED
 
+#include "core/config/engine.h"
+#include "editor/run/editor_run_bar.h"
 #include "editor/strata/strata_toolbar.h"
 
 namespace TestStrataToolbar {
@@ -50,6 +52,15 @@ TEST_CASE("[Strata][Toolbar] Buttons follow UE4's level editor toolbar") {
 		CHECK(String(buttons[i].icon) == icons[i]);
 		CHECK(buttons[i].has_dropdown == dropdowns[i]);
 	}
+}
+
+TEST_CASE("[Editor][Strata][Toolbar] Run bar in Recovery Mode can hide its play buttons") {
+	// Recovery Mode builds the run bar without play buttons; the toolbar must not crash the editor there.
+	Engine::get_singleton()->set_recovery_mode_hint(true);
+	EditorRunBar *run_bar = memnew(EditorRunBar);
+	run_bar->set_play_buttons_visible(false);
+	memdelete(run_bar);
+	Engine::get_singleton()->set_recovery_mode_hint(false);
 }
 
 } // namespace TestStrataToolbar

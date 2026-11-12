@@ -47,6 +47,7 @@ struct StrataBakeTargets {
 // UE4's Build menu: bakes lighting (LightmapGI, VoxelGI) and navigation for the open level.
 namespace StrataBuild {
 StrataBakeTargets collect_targets(Node *p_level_root);
+bool is_foreign_data(const String &p_data_path, const String &p_level_path);
 String lightmap_save_path(const LightmapGI *p_lightmap, const String &p_level_path);
 void build_all(Node *p_level_root, bool p_lighting, bool p_navigation);
 } // namespace StrataBuild
