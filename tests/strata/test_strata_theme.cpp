@@ -68,6 +68,13 @@ TEST_CASE("[Strata][Theme] Inspector category bar keeps extra borders (Black OLE
 	CHECK(bg->get_border_color() == Color(1, 0, 0));
 }
 
+TEST_CASE("[Strata][Theme] Primary button text contrasts with the accent") {
+	const Color dark_text(0.08, 0.08, 0.08);
+	CHECK(StrataTheme::get_primary_button_font_color(Color(1, 0.9, 0.1)) == dark_text); // Yellow.
+	CHECK(StrataTheme::get_primary_button_font_color(StrataTheme::get_default_preset().accent_color) == dark_text); // Teal.
+	CHECK(StrataTheme::get_primary_button_font_color(Color(0.1, 0.15, 0.5)) == Color(1, 1, 1)); // Dark blue.
+}
+
 } // namespace TestStrataTheme
 
 #endif // TOOLS_ENABLED

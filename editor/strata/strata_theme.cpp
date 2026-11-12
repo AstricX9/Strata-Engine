@@ -50,6 +50,10 @@ StrataThemePreset StrataTheme::get_default_preset() {
 	return preset;
 }
 
+Color StrataTheme::get_primary_button_font_color(const Color &p_accent) {
+	return p_accent.get_luminance() > 0.5 ? Color(0.08, 0.08, 0.08) : Color(1, 1, 1);
+}
+
 void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config) {
 	// Selected tabs: lighter background, no accent underline.
 	for (const StringName type : { StringName("TabContainer"), StringName("TabBar") }) {
@@ -90,6 +94,6 @@ void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThem
 		p_theme->set_stylebox(state.name, "StrataPrimaryButton", style);
 	}
 	for (const char *font_state : { "font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color" }) {
-		p_theme->set_color(font_state, "StrataPrimaryButton", p_config.font_dark_background_color);
+		p_theme->set_color(font_state, "StrataPrimaryButton", get_primary_button_font_color(p_config.accent_color));
 	}
 }

@@ -48,5 +48,7 @@ struct StrataThemePreset {
 class StrataTheme {
 public:
 	static StrataThemePreset get_default_preset();
+	// Near-black text on light accents, white on dark ones, so primary buttons stay readable with any custom accent.
+	static Color get_primary_button_font_color(const Color &p_accent);
 	static void populate_overrides(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config);
 };
