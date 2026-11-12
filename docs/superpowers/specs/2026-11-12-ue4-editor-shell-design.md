@@ -193,12 +193,20 @@ dialogs; the translation catalogue keys are updated to match.
 
 ## 7. Project Browser (`project_browser`)
 
-Replaces the Project Manager's UI with UE4's Project Browser workflow:
-- Two tabs: **Projects** (tiles with thumbnail + name, search, Open, Browse) and
-  **New Project**.
-- New Project: template tiles (Blank, First Person, Third Person, Top Down — shipped as small
-  Strata template projects), then settings row (renderer: Forward+/Mobile/Compatibility in
-  place of UE4's quality presets; with/without Starter Content), folder + name, Create.
+Replaces the Project Manager's UI with UE4.26's Project Browser workflow (single page, as in
+the user's 4.26 reference screenshot):
+- Window titled "Strata Project Browser", page heading **Select or Create New Project**.
+- **Recent Projects**: grid of tiles (project thumbnail, name below; selected tile
+  highlighted with the Strata accent). A tile shows an engine-version badge in its corner
+  when the project was last saved by a different engine version. A blank "Blank" tile comes
+  first and starts a new empty project. Double-click opens; **More** opens a file dialog to
+  browse for a project. Search field filters tiles.
+- **New Project Categories**: list rows (icon, bold title, one-line description). Strata
+  ships only **Games** at first; choosing it opens the template step: template tiles
+  (Blank, First Person, Third Person, Top Down — shipped as small Strata template projects),
+  then settings row (renderer: Forward+/Mobile/Compatibility in place of UE4's quality
+  presets; with/without Starter Content), folder + name, Create.
+- Footer: **Open Project** (primary button) and **Cancel**.
 - Existing Godot Project Manager features (import, scan, rename, remove, tags, version
   control init) stay available under a "More ▾" menu.
 
