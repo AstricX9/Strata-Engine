@@ -31,6 +31,7 @@
 #include "strata_layout.h"
 
 #include "core/variant/array.h"
+#include "core/variant/dictionary.h"
 
 void StrataLayout::fill_default_layout(const Ref<ConfigFile> &p_layout, const StrataDockKeys &p_keys, int p_vsplit_count) {
 	const String section = "docks";
@@ -47,6 +48,14 @@ void StrataLayout::fill_default_layout(const Ref<ConfigFile> &p_layout, const St
 	closed.push_back(p_keys.groups);
 	closed.push_back(p_keys.history);
 	p_layout->set_value(section, "dock_closed", closed);
+
+	// The Content Browser leads the bottom dock order (see get_bottom_dock_order), so open tab 0 like UE4.
+	p_layout->set_value(section, "dock_9_selected_tab_idx", 0);
+	Dictionary offsets;
+	offsets[KEY_CONTENT_BROWSER] = -300;
+	offsets[KEY_OUTPUT_LOG] = -270;
+	offsets["Audio"] = -450;
+	p_layout->set_value("EditorNode", "bottom_panel_offsets", offsets);
 
 	const int hsplits[] = { 0, 0, -RIGHT_COLUMN_WIDTH, 0 };
 	for (int i = 0; i < 4; i++) {

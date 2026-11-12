@@ -9212,13 +9212,6 @@ EditorNode::EditorNode() {
 		StrataLayout::fill_default_layout(default_layout, keys, editor_dock_manager->get_vsplit_count());
 	}
 
-	{
-		Dictionary offsets;
-		offsets["Audio"] = -450;
-		offsets["Output"] = -270;
-		default_layout->set_value(EDITOR_NODE_CONFIG_SECTION, "bottom_panel_offsets", offsets);
-	}
-
 	_update_layouts_menu();
 
 	// Bottom panels.

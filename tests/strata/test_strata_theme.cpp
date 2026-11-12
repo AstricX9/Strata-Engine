@@ -35,6 +35,8 @@ TEST_FORCE_LINK(test_strata_theme)
 #ifdef TOOLS_ENABLED
 
 #include "editor/strata/strata_theme.h"
+#include "editor/themes/editor_theme.h"
+#include "scene/resources/style_box_flat.h"
 
 namespace TestStrataTheme {
 
@@ -49,6 +51,21 @@ TEST_CASE("[Strata][Theme] Default preset is Strata's own") {
 	CHECK(p.extra_spacing == 2);
 	CHECK(p.dialogs_buttons_min_size == Size2(90, 26));
 	CHECK(p.main_font_size == 12);
+}
+
+TEST_CASE("[Strata][Theme] Inspector category bar keeps extra borders (Black OLED preset)") {
+	Ref<EditorTheme> theme;
+	theme.instantiate();
+	EditorThemeManager::ThemeConfiguration config;
+	config.base_style.instantiate();
+	config.button_style.instantiate();
+	config.draw_extra_borders = true;
+	config.extra_border_color_2 = Color(1, 0, 0);
+	StrataTheme::populate_overrides(theme, config);
+	Ref<StyleBoxFlat> bg = theme->get_stylebox("bg", "EditorInspectorCategory");
+	REQUIRE(bg.is_valid());
+	CHECK(bg->get_border_width(SIDE_TOP) == 1);
+	CHECK(bg->get_border_color() == Color(1, 0, 0));
 }
 
 } // namespace TestStrataTheme

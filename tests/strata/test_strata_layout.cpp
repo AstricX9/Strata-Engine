@@ -69,6 +69,18 @@ TEST_CASE("[Strata][Layout] Bottom order is Content Browser, Output Log, then th
 	CHECK(StrataLayout::get_bottom_dock_order({ "Debugger" }) == "Debugger");
 }
 
+TEST_CASE("[Strata][Layout] Content Browser starts open with a usable height") {
+	Ref<ConfigFile> cfg;
+	cfg.instantiate();
+	StrataLayout::fill_default_layout(cfg, { "Scene", "Inspector", "Import", "Signals", "Groups", "History" }, 4);
+	// Bottom dock order always starts with the Content Browser, so tab 0 is the Content Browser.
+	CHECK(int(cfg->get_value("docks", "dock_9_selected_tab_idx", -1)) == 0);
+	Dictionary offsets = cfg->get_value("EditorNode", "bottom_panel_offsets", Dictionary());
+	CHECK(int(offsets.get("FileSystem", 0)) == -300);
+	CHECK(int(offsets.get("Output", 0)) == -270);
+	CHECK(int(offsets.get("Audio", 0)) == -450);
+}
+
 } // namespace TestStrataLayout
 
 #endif // TOOLS_ENABLED

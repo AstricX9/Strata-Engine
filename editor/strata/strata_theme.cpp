@@ -66,6 +66,11 @@ void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThem
 	Ref<StyleBoxFlat> category_bg = p_config.base_style->duplicate();
 	category_bg->set_bg_color(p_config.surface_lowest_color);
 	category_bg->set_content_margin_individual(6 * EDSCALE, 4 * EDSCALE, 6 * EDSCALE, 4 * EDSCALE);
+	if (p_config.draw_extra_borders) {
+		// Presets like Black (OLED) rely on this border; without it the bar vanishes into the panel.
+		category_bg->set_border_width_all(1);
+		category_bg->set_border_color(p_config.extra_border_color_2);
+	}
 	p_theme->set_stylebox("bg", "EditorInspectorCategory", category_bg);
 
 	// Primary action buttons (Add Component, Add/Import, Play) use the accent.
