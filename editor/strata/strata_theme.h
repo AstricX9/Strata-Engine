@@ -36,6 +36,7 @@
 struct StrataThemePreset {
 	Color base_color;
 	Color accent_color;
+	Color primary_color; // Main action buttons and the Play icon.
 	float contrast = 0.0;
 	float icon_saturation = 0.0;
 	int corner_radius = 0;

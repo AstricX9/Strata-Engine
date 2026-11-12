@@ -30,6 +30,7 @@
 
 #include "strata_theme.h"
 
+#include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme.h"
 #include "scene/resources/style_box_flat.h"
@@ -37,9 +38,10 @@
 
 StrataThemePreset StrataTheme::get_default_preset() {
 	StrataThemePreset preset;
-	preset.base_color = Color(0.118, 0.122, 0.133);
-	// Teal: deliberately not UE4's tan/orange nor Godot's blue.
-	preset.accent_color = Color(0.16, 0.74, 0.62);
+	// UE4's scheme: neutral grey panels, orange-gold selection, green main actions.
+	preset.base_color = Color(0.141, 0.141, 0.141);
+	preset.accent_color = Color(0.89, 0.62, 0.11);
+	preset.primary_color = Color(0.22, 0.52, 0.14);
 	preset.contrast = 0.25;
 	preset.icon_saturation = 2.0;
 	preset.corner_radius = 2;
@@ -86,15 +88,23 @@ void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThem
 	toolbar_panel->set_content_margin_individual(4 * EDSCALE, 2 * EDSCALE, 4 * EDSCALE, 2 * EDSCALE);
 	p_theme->set_stylebox(SceneStringName(panel), "StrataToolbar", toolbar_panel);
 
-	// Primary action buttons (Add Component, Add/Import, Play) use the accent.
+	// Text fields sit lighter than their panel, as in UE4.
+	Ref<StyleBoxFlat> field = p_theme->has_stylebox("normal", "LineEdit") ? p_theme->get_stylebox("normal", "LineEdit") : Ref<StyleBox>();
+	field = field.is_valid() ? Ref<StyleBoxFlat>(field->duplicate()) : Ref<StyleBoxFlat>(p_config.base_style->duplicate());
+	field->set_bg_color(p_config.base_color.lightened(0.18));
+	p_theme->set_stylebox("normal", "LineEdit", field);
+
+	// Primary action buttons (Add Component, Add/Import, Open Project) and the Play icon are green, as in UE4.
+	const Color primary = get_default_preset().primary_color;
+	p_theme->set_color("strata_primary_color", EditorStringName(Editor), primary);
 	p_theme->set_type_variation("StrataPrimaryButton", "Button");
 	const struct {
 		const char *name;
 		Color color;
 	} states[] = {
-		{ "normal", p_config.accent_color.darkened(0.2) },
-		{ "hover", p_config.accent_color },
-		{ "pressed", p_config.accent_color.darkened(0.35) },
+		{ "normal", primary.darkened(0.15) },
+		{ "hover", primary },
+		{ "pressed", primary.darkened(0.3) },
 	};
 	for (const auto &state : states) {
 		Ref<StyleBoxFlat> style = p_config.button_style->duplicate();
@@ -103,6 +113,6 @@ void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThem
 		p_theme->set_stylebox(state.name, "StrataPrimaryButton", style);
 	}
 	for (const char *font_state : { "font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color" }) {
-		p_theme->set_color(font_state, "StrataPrimaryButton", get_primary_button_font_color(p_config.accent_color));
+		p_theme->set_color(font_state, "StrataPrimaryButton", get_primary_button_font_color(primary));
 	}
 }

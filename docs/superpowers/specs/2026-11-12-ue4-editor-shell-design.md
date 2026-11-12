@@ -9,9 +9,10 @@ as closely as possible: same panel arrangement, toolbar, workflows, terminology 
 controls. Reference: the user's UE 4.26 screenshots (Minimal_Default level; Place Actors,
 Landscape mode, World Settings). Screenshots are reference only and are **not** committed.
 
-Guiding rule: **match UE4.26 in how things work, not in how they look.** Layout, workflow,
-naming and controls follow UE4; colours, icons and styling are Strata's own and must not be
-a visual copy. Deviate from UE4 behaviour only where Godot has nothing equivalent underneath,
+Guiding rule: **look and work like UE4.26, without copying Epic's assets.** Layout, workflow,
+naming, controls and colour scheme follow UE4 (decided 2026-11-13: the theme matches UE4's
+colours). Epic's images, icons and other editor assets are never used: icons are Godot's or
+open-licence (Lucide, ISC). Deviate from UE4 behaviour only where Godot has nothing equivalent underneath,
 and record the deviation here.
 
 ## Decisions
@@ -20,7 +21,7 @@ and record the deviation here.
 |---|---|
 | Scope | Full UE4 shell: layout, theme, names, toolbar, Place Actors, Outliner Type column + folders, Details Add Component bar, Content Browser, viewport bar, UE4 navigation, UE4 terminology, Project Browser |
 | Godot look | Replaced entirely by Strata's own theme. Classic/Modern styles and Godot's default layout are removed |
-| Visual identity | Strata's own palette and styling; Godot's icons kept. No UE colours, icons or assets copied |
+| Visual identity | UE4-like colour scheme (neutral greys, orange-gold selection, green primary buttons); icons are Godot's or recoloured Lucide (ISC). No Epic assets copied |
 | Main-screen tabs | Replaced by one UE-style document tab bar |
 | Wording | UE4 terms throughout the editor UI: panel/menu names, scene → Level, node → Actor, child nodes listed in Details → Components. Engine class names and the scripting API keep Godot names |
 | Viewport controls | New "Unreal" navigation scheme, default |
@@ -64,17 +65,19 @@ Audio) in an inspector, as UE4's World Settings tab does.
 
 ## 2. Theme (`strata_theme`)
 
-Strata's own look. It shares UE4's *structure* (dense, dark, panel-heavy) but not its
-colours or styling. Accent and base colour remain configurable in Editor Settings.
+Looks like UE4: dense, dark, panel-heavy, with UE4's colour scheme. Accent and base colour
+remain configurable in Editor Settings.
 
-- Dark neutral base with a single Strata accent colour (chosen during milestone 1; must not be
-  UE4's tan/orange selection or green/blue button scheme).
-- Primary actions (Add Component, Add/Import, Play) use the accent; secondary actions neutral.
+- Flat neutral greys (no blue tint) for panels, darker gaps between panels.
+- Orange-gold accent for selection, focus and highlights.
+- Primary actions (Add Component, Add/Import, Open Project) are green buttons; the Play icon
+  is green. Secondary actions neutral.
+- Text fields lighter than the panels they sit on.
 - Inspector: distinct section header bars with ▸/▾ and title; clear label/value divider.
 - Vector3 fields: X/Y/Z axis colour coding (a common convention, shared with Godot's gizmos).
 - Dense: ~9pt UI font, tight margins.
 - Tabs: compact, icon + label + ×.
-- Godot's icons kept; new large toolbar icons drawn in Strata's style.
+- Godot's icons kept; toolbar icons are recoloured Lucide (ISC).
 
 ## 3. Toolbar (`strata_toolbar`) and document tabs (`strata_document_tabs`)
 

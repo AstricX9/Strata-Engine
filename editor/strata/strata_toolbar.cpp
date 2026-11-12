@@ -232,10 +232,10 @@ void StrataToolbar::_notification(int p_what) {
 				const Ref<DPITexture> big_icon = make_toolbar_icon(icon);
 				buttons[info.id]->set_button_icon(big_icon.is_valid() ? Ref<Texture2D>(big_icon) : icon);
 			}
-			// Play stands out by an accent-coloured icon, not a filled button.
-			const Color accent = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
+			// Play stands out by a green icon, as in UE4, not a filled button.
+			const Color primary = get_theme_color(SNAME("strata_primary_color"), EditorStringName(Editor));
 			for (const char *state : { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color" }) {
-				buttons[PLAY]->add_theme_color_override(state, accent);
+				buttons[PLAY]->add_theme_color_override(state, primary);
 			}
 			play_options->set_button_icon(get_editor_theme_icon(SNAME("GuiDropdown")));
 		} break;

@@ -42,8 +42,10 @@ namespace TestStrataTheme {
 
 TEST_CASE("[Strata][Theme] Default preset is Strata's own") {
 	const StrataThemePreset p = StrataTheme::get_default_preset();
-	CHECK(p.base_color.is_equal_approx(Color(0.118, 0.122, 0.133)));
-	CHECK(p.accent_color.is_equal_approx(Color(0.16, 0.74, 0.62)));
+	// UE4's scheme: neutral grey panels, orange-gold accent, green primary actions.
+	CHECK(p.base_color.is_equal_approx(Color(0.141, 0.141, 0.141)));
+	CHECK(p.accent_color.is_equal_approx(Color(0.89, 0.62, 0.11)));
+	CHECK(p.primary_color.is_equal_approx(Color(0.22, 0.52, 0.14)));
 	CHECK(p.contrast == doctest::Approx(0.25));
 	CHECK(p.icon_saturation == doctest::Approx(2.0));
 	CHECK(p.corner_radius == 2);
@@ -71,8 +73,37 @@ TEST_CASE("[Strata][Theme] Inspector category bar keeps extra borders (Black OLE
 TEST_CASE("[Strata][Theme] Primary button text contrasts with the accent") {
 	const Color dark_text(0.08, 0.08, 0.08);
 	CHECK(StrataTheme::get_primary_button_font_color(Color(1, 0.9, 0.1)) == dark_text); // Yellow.
-	CHECK(StrataTheme::get_primary_button_font_color(StrataTheme::get_default_preset().accent_color) == dark_text); // Teal.
+	CHECK(StrataTheme::get_primary_button_font_color(StrataTheme::get_default_preset().accent_color) == dark_text); // Orange-gold.
+	CHECK(StrataTheme::get_primary_button_font_color(StrataTheme::get_default_preset().primary_color) == Color(1, 1, 1)); // Green.
 	CHECK(StrataTheme::get_primary_button_font_color(Color(0.1, 0.15, 0.5)) == Color(1, 1, 1)); // Dark blue.
+}
+
+static Ref<EditorTheme> make_theme(EditorThemeManager::ThemeConfiguration &r_config) {
+	Ref<EditorTheme> theme;
+	theme.instantiate();
+	r_config.base_style.instantiate();
+	r_config.button_style.instantiate();
+	r_config.base_color = Color(0.141, 0.141, 0.141);
+	r_config.accent_color = Color(0.89, 0.62, 0.11);
+	StrataTheme::populate_overrides(theme, r_config);
+	return theme;
+}
+
+TEST_CASE("[Strata][Theme] Primary buttons are green like UE4, not the accent") {
+	EditorThemeManager::ThemeConfiguration config;
+	Ref<EditorTheme> theme = make_theme(config);
+	Ref<StyleBoxFlat> hover = theme->get_stylebox("hover", "StrataPrimaryButton");
+	REQUIRE(hover.is_valid());
+	CHECK(hover->get_bg_color().is_equal_approx(StrataTheme::get_default_preset().primary_color));
+	CHECK(theme->get_color("font_color", "StrataPrimaryButton") == Color(1, 1, 1));
+}
+
+TEST_CASE("[Strata][Theme] Text fields are lighter than the panels") {
+	EditorThemeManager::ThemeConfiguration config;
+	Ref<EditorTheme> theme = make_theme(config);
+	Ref<StyleBoxFlat> field = theme->get_stylebox("normal", "LineEdit");
+	REQUIRE(field.is_valid());
+	CHECK(field->get_bg_color().get_luminance() > config.base_color.get_luminance() + 0.05);
 }
 
 } // namespace TestStrataTheme
