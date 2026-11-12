@@ -1,3 +1,5 @@
+> **Strata Engine** — a Godot fork aiming for an Unreal Engine 4-style editor and workflow. See [STRATA.md](STRATA.md). The upstream Godot README follows.
+
 # Godot Engine
 
 <p align="center">
