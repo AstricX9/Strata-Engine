@@ -49,7 +49,7 @@ TEST_CASE("[Strata][Build] No level gives no bake targets") {
 	CHECK(targets.nav_regions.is_empty());
 }
 
-TEST_CASE("[Strata][Build] Bake targets are found anywhere in the level") {
+TEST_CASE("[SceneTree][Strata][Build] Bake targets are found anywhere in the level") {
 	Node3D *root = memnew(Node3D);
 	VoxelGI *voxel_gi = memnew(VoxelGI);
 	root->add_child(voxel_gi);
@@ -71,13 +71,13 @@ TEST_CASE("[Strata][Build] Bake targets are found anywhere in the level") {
 	memdelete(root);
 }
 
-TEST_CASE("[Strata][Build] Lightmap save path follows the level file") {
+TEST_CASE("[SceneTree][Strata][Build] Lightmap save path follows the level file") {
 	LightmapGI *lightmap = memnew(LightmapGI);
 	CHECK(StrataBuild::lightmap_save_path(lightmap, "res://levels/arena.tscn") == "res://levels/arena.lmbake");
 	memdelete(lightmap);
 }
 
-TEST_CASE("[Strata][Build] Unsaved level has no lightmap save path") {
+TEST_CASE("[SceneTree][Strata][Build] Unsaved level has no lightmap save path") {
 	LightmapGI *lightmap = memnew(LightmapGI);
 	CHECK(StrataBuild::lightmap_save_path(lightmap, "") == "");
 	memdelete(lightmap);

@@ -145,6 +145,7 @@
 #include "editor/shader/editor_native_shader_source_visualizer.h"
 #include "editor/shader/text_shader_editor.h"
 #include "editor/strata/strata_layout.h"
+#include "editor/strata/strata_toolbar.h"
 #include "editor/themes/editor_color_map.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
@@ -9086,7 +9087,11 @@ EditorNode::EditorNode() {
 
 	project_run_bar = memnew(EditorRunBar);
 	project_run_bar->set_mouse_filter(Control::MOUSE_FILTER_STOP);
-	title_bar->add_child(project_run_bar);
+	// The run bar lives in the Strata toolbar's Play group, right after Play.
+	strata_toolbar = memnew(StrataToolbar);
+	main_vbox->add_child(strata_toolbar);
+	main_vbox->move_child(strata_toolbar, title_bar->get_index() + 1);
+	strata_toolbar->set_run_bar(project_run_bar);
 	project_run_bar->connect("play_pressed", callable_mp(this, &EditorNode::_project_run_started));
 	project_run_bar->connect("stop_pressed", callable_mp(this, &EditorNode::_project_run_stopped));
 

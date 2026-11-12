@@ -140,6 +140,8 @@ public:
 	void update_profiler_autostart_indicator();
 
 	Button *get_pause_button() { return pause_button; }
+	// Strata's toolbar has its own Play button and menu, so it hides Godot's play buttons.
+	void set_play_buttons_visible(bool p_visible);
 
 	HBoxContainer *get_buttons_container();
 

@@ -88,6 +88,7 @@ class EditorPluginList;
 class EditorResourcePreview;
 class EditorResourceConversionPlugin;
 class EditorRunBar;
+class StrataToolbar;
 class EditorSceneTabs;
 class EditorSelectionHistory;
 class EditorSettingsDialog;
@@ -329,6 +330,7 @@ private:
 	Control *right_menu_spacer = nullptr;
 	EditorTitleBar *title_bar = nullptr;
 	EditorRunBar *project_run_bar = nullptr;
+	StrataToolbar *strata_toolbar = nullptr;
 	HBoxContainer *right_menu_hb = nullptr;
 
 	// Spacers to center 2D / 3D / Script buttons.

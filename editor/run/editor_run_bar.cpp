@@ -519,6 +519,13 @@ void EditorRunBar::set_movie_maker_enabled(bool p_enabled) {
 	write_movie_button->get_popup()->set_item_checked(0, p_enabled);
 }
 
+void EditorRunBar::set_play_buttons_visible(bool p_visible) {
+	play_button->set_visible(p_visible);
+	play_scene_button->set_visible(p_visible);
+	play_custom_scene_button->set_visible(p_visible);
+	write_movie_panel->set_visible(p_visible);
+}
+
 bool EditorRunBar::is_movie_maker_enabled() const {
 	return movie_maker_enabled;
 }
