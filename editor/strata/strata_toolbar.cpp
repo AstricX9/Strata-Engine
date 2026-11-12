@@ -38,6 +38,7 @@
 #include "editor/docks/scene_tree_dock.h"
 #include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
+#include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/run/editor_run_bar.h"
 #include "editor/settings/editor_settings.h"
@@ -46,19 +47,48 @@
 #include "editor/version_control/version_control_editor_plugin.h"
 #include "scene/animation/animation_player.h"
 #include "scene/gui/menu_button.h"
+#include "scene/gui/separator.h"
+#include "scene/resources/dpi_texture.h"
+
+// Toolbar dropdown: draws a small arrow beside the icon, as UE4 does, instead of a "▾" in the label.
+class StrataToolbarMenuButton : public MenuButton {
+	GDCLASS(StrataToolbarMenuButton, MenuButton);
+
+protected:
+	void _notification(int p_what) {
+		if (p_what != NOTIFICATION_DRAW || get_button_icon().is_null()) {
+			return;
+		}
+		const Ref<Texture2D> arrow = get_editor_theme_icon(SNAME("GuiDropdown"));
+		const Ref<Texture2D> icon = get_button_icon();
+		const Ref<StyleBox> style = get_theme_stylebox(SNAME("normal"));
+		const Point2 icon_end((get_size().x + icon->get_width()) / 2, style->get_margin(SIDE_TOP) + icon->get_height());
+		draw_texture(arrow, icon_end - Point2(0, arrow->get_height()), get_theme_color(SNAME("font_color")));
+	}
+};
+
+Ref<DPITexture> StrataToolbar::make_toolbar_icon(const Ref<Texture2D> &p_icon) {
+	const Ref<DPITexture> source = p_icon;
+	if (source.is_null()) {
+		return Ref<DPITexture>();
+	}
+	Ref<DPITexture> icon = source->duplicate();
+	icon->set_base_scale(source->get_base_scale() * ICON_SCALE);
+	return icon;
+}
 
 Vector<StrataToolbar::ButtonInfo> StrataToolbar::get_buttons() {
 	return {
-		{ SAVE_CURRENT, TTRC("Save Current"), "Save", false },
-		{ SOURCE_CONTROL, TTRC("Source Control"), "VcsBranches", true },
-		{ CONTENT, TTRC("Content"), "Folder", false },
-		{ MARKETPLACE, TTRC("Marketplace"), "AssetStore", false },
-		{ SETTINGS, TTRC("Settings"), "Tools", true },
-		{ BLUEPRINTS, TTRC("Blueprints"), "Script", true },
-		{ CINEMATICS, TTRC("Cinematics"), "Animation", true },
-		{ BUILD, TTRC("Build"), "Bake", true },
-		{ PLAY, TTRC("Play"), "Play", true },
-		{ LAUNCH, TTRC("Launch"), "PlayRemote", true },
+		{ SAVE_CURRENT, TTRC("Save Current"), "Save", false, false },
+		{ SOURCE_CONTROL, TTRC("Source Control"), "VcsBranches", true, true },
+		{ CONTENT, TTRC("Content"), "Folder", false, true },
+		{ MARKETPLACE, TTRC("Marketplace"), "AssetStore", false, false },
+		{ SETTINGS, TTRC("Settings"), "Tools", true, true },
+		{ BLUEPRINTS, TTRC("Blueprints"), "Script", true, true },
+		{ CINEMATICS, TTRC("Cinematics"), "Animation", true, false },
+		{ BUILD, TTRC("Build"), "Bake", true, true },
+		{ PLAY, TTRC("Play"), "Play", true, true },
+		{ LAUNCH, TTRC("Launch"), "PlayRemote", true, true },
 	};
 }
 
@@ -198,53 +228,62 @@ void StrataToolbar::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
 			for (const ButtonInfo &info : get_buttons()) {
-				buttons[info.id]->set_button_icon(get_editor_theme_icon(StringName(info.icon)));
+				const Ref<Texture2D> icon = get_editor_theme_icon(StringName(info.icon));
+				const Ref<DPITexture> big_icon = make_toolbar_icon(icon);
+				buttons[info.id]->set_button_icon(big_icon.is_valid() ? Ref<Texture2D>(big_icon) : icon);
 			}
+			// Play stands out by an accent-coloured icon, not a filled button.
+			const Color accent = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
+			for (const char *state : { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color" }) {
+				buttons[PLAY]->add_theme_color_override(state, accent);
+			}
+			play_options->set_button_icon(get_editor_theme_icon(SNAME("GuiDropdown")));
 		} break;
 	}
 }
 
 void StrataToolbar::set_run_bar(EditorRunBar *p_run_bar) {
 	if (p_run_bar->get_parent()) {
-		p_run_bar->reparent(this);
+		p_run_bar->reparent(row);
 	} else {
-		add_child(p_run_bar);
+		row->add_child(p_run_bar);
 	}
-	move_child(p_run_bar, play_options->get_index() + 1);
+	row->move_child(p_run_bar, play_options->get_index() + 1);
 	p_run_bar->set_v_size_flags(SIZE_SHRINK_CENTER);
 	p_run_bar->set_play_buttons_visible(false);
 }
 
 StrataToolbar::StrataToolbar() {
 	set_name("StrataToolbar");
-	add_theme_constant_override("separation", 2 * EDSCALE);
+	set_theme_type_variation("StrataToolbar");
+	row = memnew(HBoxContainer);
+	row->add_theme_constant_override("separation", 2 * EDSCALE);
+	add_child(row);
 
 	for (const ButtonInfo &info : get_buttons()) {
+		if (info.group_start) {
+			row->add_child(memnew(VSeparator));
+		}
 		const bool is_menu = info.has_dropdown && info.id != PLAY;
-		Button *button = is_menu ? memnew(MenuButton) : memnew(Button);
-		button->set_text(is_menu ? vformat(U"%s ▾", TTR(info.label)) : TTR(info.label));
+		Button *button = is_menu ? memnew(StrataToolbarMenuButton) : memnew(Button);
+		button->set_text(TTR(info.label));
 		button->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 		button->set_vertical_icon_alignment(VERTICAL_ALIGNMENT_TOP);
 		button->set_icon_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 		button->set_custom_minimum_size(Size2(64, 0) * EDSCALE);
 		button->set_focus_mode(FOCUS_ACCESSIBILITY);
-		if (info.id == PLAY) {
-			button->set_theme_type_variation("StrataPrimaryButton");
-		} else {
-			button->set_flat(true);
-		}
+		button->set_flat(true);
 		if (!is_menu) {
 			button->connect(SceneStringName(pressed), callable_mp(this, &StrataToolbar::_button_pressed).bind(info.id));
 		}
 		buttons[info.id] = button;
-		add_child(button);
+		row->add_child(button);
 
 		if (info.id == PLAY) {
 			play_options = memnew(MenuButton);
-			play_options->set_text(U"▾");
 			play_options->set_flat(true);
 			play_options->set_tooltip_text(TTRC("Play options."));
-			add_child(play_options);
+			row->add_child(play_options);
 		}
 	}
 

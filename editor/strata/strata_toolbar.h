@@ -30,16 +30,19 @@
 
 #pragma once
 
-#include "scene/gui/box_container.h"
+#include "scene/gui/panel_container.h"
 
 class Button;
+class DPITexture;
 class EditorRunBar;
 class MenuButton;
+class HBoxContainer;
 class PopupMenu;
+class Texture2D;
 
-// UE4's level editor toolbar: large icon-over-label buttons under the menu bar.
-class StrataToolbar : public HBoxContainer {
-	GDCLASS(StrataToolbar, HBoxContainer);
+// UE4's level editor toolbar: large icon-over-label buttons above the viewport.
+class StrataToolbar : public PanelContainer {
+	GDCLASS(StrataToolbar, PanelContainer);
 
 public:
 	enum ButtonId {
@@ -61,7 +64,10 @@ public:
 		const char *label;
 		const char *icon;
 		bool has_dropdown;
+		bool group_start; // A separator goes before this button.
 	};
+
+	static constexpr int ICON_SCALE = 2;
 
 private:
 	enum MenuItem {
@@ -84,6 +90,7 @@ private:
 		LAUNCH_PACK_ZIP,
 	};
 
+	HBoxContainer *row = nullptr;
 	Button *buttons[BUTTON_MAX] = {};
 	MenuButton *play_options = nullptr;
 
@@ -100,6 +107,8 @@ protected:
 
 public:
 	static Vector<ButtonInfo> get_buttons();
+	// A sharp copy of an editor icon at ICON_SCALE times its size; theme recolouring is kept.
+	static Ref<DPITexture> make_toolbar_icon(const Ref<Texture2D> &p_icon);
 	// Moves Godot's run bar (Pause, Stop, deploy, indicators) right after Play and hides its own play buttons.
 	void set_run_bar(EditorRunBar *p_run_bar);
 

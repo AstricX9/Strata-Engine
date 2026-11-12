@@ -37,6 +37,7 @@ TEST_FORCE_LINK(test_strata_toolbar)
 #include "core/config/engine.h"
 #include "editor/run/editor_run_bar.h"
 #include "editor/strata/strata_toolbar.h"
+#include "scene/resources/dpi_texture.h"
 
 namespace TestStrataToolbar {
 
@@ -52,6 +53,25 @@ TEST_CASE("[Strata][Toolbar] Buttons follow UE4's level editor toolbar") {
 		CHECK(String(buttons[i].icon) == icons[i]);
 		CHECK(buttons[i].has_dropdown == dropdowns[i]);
 	}
+}
+
+TEST_CASE("[Strata][Toolbar] Separators split the toolbar into UE4's groups") {
+	// Save | Source Control | Content, Marketplace | Settings | Blueprints, Cinematics | Build | Play | Launch
+	const bool group_starts[] = { false, true, true, false, true, true, false, true, true, true };
+	const Vector<StrataToolbar::ButtonInfo> buttons = StrataToolbar::get_buttons();
+	for (int i = 0; i < buttons.size(); i++) {
+		CHECK_MESSAGE(buttons[i].group_start == group_starts[i], buttons[i].label);
+	}
+}
+
+TEST_CASE("[Strata][Toolbar] Toolbar icons are sharp copies at twice the editor icon size") {
+	const String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><rect width=\"16\" height=\"16\" fill=\"#fff\"/></svg>";
+	Ref<DPITexture> icon = DPITexture::create_from_string(svg, 1.0, 0.5);
+	Ref<DPITexture> big = StrataToolbar::make_toolbar_icon(icon);
+	REQUIRE(big.is_valid());
+	CHECK(big != icon); // The shared theme icon is left alone.
+	CHECK(big->get_width() == icon->get_width() * StrataToolbar::ICON_SCALE);
+	CHECK(big->get_saturation() == doctest::Approx(0.5)); // Theme recolouring is kept.
 }
 
 TEST_CASE("[Editor][Strata][Toolbar] Run bar in Recovery Mode can hide its play buttons") {

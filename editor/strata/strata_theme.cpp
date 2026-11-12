@@ -77,6 +77,15 @@ void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThem
 	}
 	p_theme->set_stylebox("bg", "EditorInspectorCategory", category_bg);
 
+	// Level editor toolbar: a raised strip above the viewport.
+	p_theme->set_type_variation("StrataToolbar", "PanelContainer");
+	Ref<StyleBoxFlat> toolbar_panel = p_config.base_style->duplicate();
+	toolbar_panel->set_bg_color(p_config.surface_high_color);
+	toolbar_panel->set_border_width_all(0);
+	toolbar_panel->set_corner_radius_all(0);
+	toolbar_panel->set_content_margin_individual(4 * EDSCALE, 2 * EDSCALE, 4 * EDSCALE, 2 * EDSCALE);
+	p_theme->set_stylebox(SceneStringName(panel), "StrataToolbar", toolbar_panel);
+
 	// Primary action buttons (Add Component, Add/Import, Play) use the accent.
 	p_theme->set_type_variation("StrataPrimaryButton", "Button");
 	const struct {

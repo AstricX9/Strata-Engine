@@ -9087,10 +9087,10 @@ EditorNode::EditorNode() {
 
 	project_run_bar = memnew(EditorRunBar);
 	project_run_bar->set_mouse_filter(Control::MOUSE_FILTER_STOP);
-	// The run bar lives in the Strata toolbar's Play group, right after Play.
+	// UE4 puts the level toolbar above the viewport, between the side docks. The run bar lives in its Play group.
 	strata_toolbar = memnew(StrataToolbar);
-	main_vbox->add_child(strata_toolbar);
-	main_vbox->move_child(strata_toolbar, title_bar->get_index() + 1);
+	editor_main_screen->get_parent()->add_child(strata_toolbar);
+	editor_main_screen->get_parent()->move_child(strata_toolbar, editor_main_screen->get_index());
 	strata_toolbar->set_run_bar(project_run_bar);
 	project_run_bar->connect("play_pressed", callable_mp(this, &EditorNode::_project_run_started));
 	project_run_bar->connect("stop_pressed", callable_mp(this, &EditorNode::_project_run_stopped));

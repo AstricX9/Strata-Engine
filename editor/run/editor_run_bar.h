@@ -74,6 +74,8 @@ class EditorRunBar : public MarginContainer {
 	Button *play_button = nullptr;
 	Button *pause_button = nullptr;
 	Button *stop_button = nullptr;
+	bool hide_idle_run_controls = false;
+	void _update_run_controls_visibility();
 	Button *play_scene_button = nullptr;
 	Button *play_custom_scene_button = nullptr;
 
@@ -140,7 +142,8 @@ public:
 	void update_profiler_autostart_indicator();
 
 	Button *get_pause_button() { return pause_button; }
-	// Strata's toolbar has its own Play button and menu, so it hides Godot's play buttons.
+	// Strata's toolbar has its own Play button and menu, so it hides Godot's play buttons
+	// and shows Pause/Stop only while the project runs, as UE4 does.
 	void set_play_buttons_visible(bool p_visible);
 
 	HBoxContainer *get_buttons_container();

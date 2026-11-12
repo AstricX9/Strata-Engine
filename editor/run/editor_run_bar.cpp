@@ -370,6 +370,7 @@ void EditorRunBar::_run_scene(const String &p_scene_path, const Vector<String> &
 
 	_update_play_buttons();
 	stop_button->set_disabled(false);
+	_update_run_controls_visibility();
 
 	emit_signal(SNAME("play_pressed"));
 }
@@ -472,6 +473,7 @@ void EditorRunBar::stop_playing() {
 	run_current_filename.clear();
 	stop_button->set_pressed(false);
 	stop_button->set_disabled(true);
+	_update_run_controls_visibility();
 	_reset_play_buttons();
 
 	emit_signal(SNAME("stop_pressed"));
@@ -527,6 +529,17 @@ void EditorRunBar::set_play_buttons_visible(bool p_visible) {
 	play_scene_button->set_visible(p_visible);
 	play_custom_scene_button->set_visible(p_visible);
 	write_movie_panel->set_visible(p_visible);
+	hide_idle_run_controls = !p_visible;
+	_update_run_controls_visibility();
+}
+
+void EditorRunBar::_update_run_controls_visibility() {
+	if (!pause_button) {
+		return;
+	}
+	const bool visible = !hide_idle_run_controls || !stop_button->is_disabled();
+	pause_button->set_visible(visible);
+	stop_button->set_visible(visible);
 }
 
 bool EditorRunBar::is_movie_maker_enabled() const {
