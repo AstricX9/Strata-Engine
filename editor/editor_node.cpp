@@ -144,6 +144,7 @@
 #include "editor/settings/project_settings_editor.h"
 #include "editor/shader/editor_native_shader_source_visualizer.h"
 #include "editor/shader/text_shader_editor.h"
+#include "editor/strata/strata_layout.h"
 #include "editor/themes/editor_color_map.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
@@ -1004,7 +1005,7 @@ void EditorNode::_notification(int p_what) {
 				EditorDock *dock = Object::cast_to<EditorDock>(bottom_panel->get_tab_control(i));
 				bottom_docks.append(dock->get_effective_layout_key());
 			}
-			default_layout->set_value("docks", "dock_9", String(",").join(bottom_docks));
+			default_layout->set_value("docks", "dock_9", StrataLayout::get_bottom_dock_order(bottom_docks));
 
 			RenderingServer::get_singleton()->viewport_set_disable_2d(get_scene_root()->get_viewport_rid(), true);
 			RenderingServer::get_singleton()->viewport_set_environment_mode(get_viewport()->get_viewport_rid(), RSE::VIEWPORT_ENVIRONMENT_DISABLED);
@@ -6330,13 +6331,11 @@ void EditorNode::_load_editor_layout() {
 			favorites->set_collapsed(false);
 		}
 
-		if (overridden_default_layout) {
-			_layout_menu_option(LAYOUT_DEFAULT);
-		} else {
-			ep.step(TTR("Loading docks..."), 1, true);
-			// Initialize some default values.
-			bottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);
-		}
+		ep.step(TTR("Loading docks..."), 1, true);
+		// Initialize some default values.
+		bottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);
+		// Docks only sit in their default slots until a layout is applied; apply the (possibly overridden) default one.
+		_layout_menu_option(LAYOUT_DEFAULT);
 	} else {
 		ep.step(TTR("Loading docks..."), 1, true);
 		editor_dock_manager->load_docks_from_config(config, "docks", true);
@@ -6639,7 +6638,7 @@ void EditorNode::_update_layouts_menu() {
 		overridden_default_layout = true;
 	}
 
-	editor_layouts->add_shortcut(ED_SHORTCUT("layout/default", overridden_default_layout ? TTRC("Default (Overridden)") : TTRC("Default")), LAYOUT_DEFAULT);
+	editor_layouts->add_shortcut(ED_SHORTCUT("layout/default", overridden_default_layout ? TTRC("Reset Layout (Overridden)") : TTRC("Reset Layout")), LAYOUT_DEFAULT);
 
 	if (err != OK) {
 		return; // No config.
@@ -9165,6 +9164,12 @@ EditorNode::EditorNode() {
 
 	// Instantiate and place editor docks.
 
+	// The bottom slot must exist before any dock whose default slot is DOCK_SLOT_BOTTOM is added.
+	bottom_panel = memnew(EditorBottomPanel);
+	editor_dock_manager->register_dock_slot(bottom_panel);
+	center_split->add_child(bottom_panel);
+	center_split->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);
+
 	memnew(SceneTreeDock(scene_root, editor_selection, editor_data));
 	editor_dock_manager->add_dock(SceneTreeDock::get_singleton());
 
@@ -9190,43 +9195,21 @@ EditorNode::EditorNode() {
 	history_dock = memnew(HistoryDock);
 	editor_dock_manager->add_dock(history_dock);
 
-	// Add some offsets to make LEFT_R and RIGHT_L docks wider than minsize.
-	const int dock_hsize = 280;
-	// By default there is only 3 visible, so set 2 split offsets for them.
-	const int dock_hsize_scaled = dock_hsize * EDSCALE;
-	main_hsplit->set_split_offsets({ dock_hsize_scaled, -dock_hsize_scaled });
+	// By default only the viewport and the right column are visible, so set one split offset for it.
+	main_hsplit->set_split_offsets({ 0, int(-StrataLayout::RIGHT_COLUMN_WIDTH * EDSCALE) });
 
 	// Define corresponding default layout.
 
-	const String docks_section = "docks";
 	default_layout.instantiate();
-	// Dock numbers are based on DockSlot enum value + 1.
 	{
-		const String scene_key = SceneTreeDock::get_singleton()->get_effective_layout_key();
-		const String import_key = ImportDock::get_singleton()->get_effective_layout_key();
-		default_layout->set_value(docks_section, "dock_3", vformat("%s,%s", scene_key, import_key));
-		default_layout->set_value(docks_section, "dock_3_selected_tab_idx", 0);
-	}
-	{
-		const String filesystem_key = filesystem_dock->get_effective_layout_key();
-		const String history_key = history_dock->get_effective_layout_key();
-		default_layout->set_value(docks_section, "dock_4", vformat("%s,%s", filesystem_key, history_key));
-		default_layout->set_value(docks_section, "dock_4_selected_tab_idx", 0);
-	}
-	{
-		const String inspector_key = InspectorDock::get_singleton()->get_effective_layout_key();
-		const String signals_key = SignalsDock::get_singleton()->get_effective_layout_key();
-		const String groups_key = GroupsDock::get_singleton()->get_effective_layout_key();
-		default_layout->set_value(docks_section, "dock_5", vformat("%s,%s,%s", inspector_key, signals_key, groups_key));
-		default_layout->set_value(docks_section, "dock_5_selected_tab_idx", 0);
-	}
-
-	int hsplits[] = { 0, dock_hsize, -dock_hsize, 0 };
-	for (int i = 0; i < (int)std_size(hsplits); i++) {
-		default_layout->set_value(docks_section, "dock_hsplit_" + itos(i + 1), hsplits[i]);
-	}
-	for (int i = 0; i < editor_dock_manager->get_vsplit_count(); i++) {
-		default_layout->set_value(docks_section, "dock_split_" + itos(i + 1), 0);
+		StrataDockKeys keys;
+		keys.outliner = SceneTreeDock::get_singleton()->get_effective_layout_key();
+		keys.details = InspectorDock::get_singleton()->get_effective_layout_key();
+		keys.import = ImportDock::get_singleton()->get_effective_layout_key();
+		keys.signals = SignalsDock::get_singleton()->get_effective_layout_key();
+		keys.groups = GroupsDock::get_singleton()->get_effective_layout_key();
+		keys.history = history_dock->get_effective_layout_key();
+		StrataLayout::fill_default_layout(default_layout, keys, editor_dock_manager->get_vsplit_count());
 	}
 
 	{
@@ -9239,11 +9222,6 @@ EditorNode::EditorNode() {
 	_update_layouts_menu();
 
 	// Bottom panels.
-
-	bottom_panel = memnew(EditorBottomPanel);
-	editor_dock_manager->register_dock_slot(bottom_panel);
-	center_split->add_child(bottom_panel);
-	center_split->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);
 
 	log = memnew(EditorLog);
 	editor_dock_manager->add_dock(log);

@@ -65,6 +65,7 @@
 #include "editor/settings/editor_settings.h"
 #include "editor/settings/editor_settings_dialog.h"
 #include "editor/shader/shader_create_dialog.h"
+#include "editor/strata/strata_layout.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
 #include "scene/gui/box_container.h"
@@ -4429,10 +4430,11 @@ void FileSystemDock::_bind_methods() {
 
 FileSystemDock::FileSystemDock() {
 	singleton = this;
-	set_name(TTRC("FileSystem"));
+	set_name(TTRC("Content Browser"));
+	set_layout_key(StrataLayout::KEY_CONTENT_BROWSER);
 	set_icon_name("Folder");
-	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_filesystem", TTRC("Open FileSystem Dock"), KeyModifierMask::ALT | Key::F));
-	set_default_slot(EditorDock::DOCK_SLOT_LEFT_BR);
+	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_filesystem", TTRC("Open Content Browser Dock"), KeyModifierMask::ALT | Key::F));
+	set_default_slot(EditorDock::DOCK_SLOT_BOTTOM);
 	set_available_layouts(DOCK_LAYOUT_ALL);
 
 	ProjectSettings::get_singleton()->add_hidden_prefix("file_customization/");

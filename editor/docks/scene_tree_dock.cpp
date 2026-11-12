@@ -62,6 +62,7 @@
 #include "editor/settings/editor_feature_profile.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/shader/shader_create_dialog.h"
+#include "editor/strata/strata_layout.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/2d/node_2d.h"
 #include "scene/animation/animation_tree.h"
@@ -4994,10 +4995,11 @@ void SceneTreeDock::_update_configuration_warning() {
 }
 
 SceneTreeDock::SceneTreeDock(Node *p_scene_root, EditorSelection *p_editor_selection, EditorData &p_editor_data) {
-	set_name(TTRC("Scene"));
+	set_name(TTRC("World Outliner"));
+	set_layout_key(StrataLayout::KEY_OUTLINER);
 	set_icon_name("PackedScene");
-	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_scene", TTRC("Open Scene Dock")));
-	set_default_slot(EditorDock::DOCK_SLOT_LEFT_UR);
+	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_scene", TTRC("Open World Outliner Dock")));
+	set_default_slot(EditorDock::DOCK_SLOT_RIGHT_UL);
 
 	singleton = this;
 	editor_data = &p_editor_data;

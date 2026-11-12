@@ -44,6 +44,7 @@
 #include "editor/script/script_editor_plugin.h"
 #include "editor/settings/editor_command_palette.h"
 #include "editor/settings/editor_settings.h"
+#include "editor/strata/strata_layout.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/flow_container.h"
@@ -485,9 +486,10 @@ void EditorLog::_reset_message_counts() {
 }
 
 EditorLog::EditorLog() {
-	set_name(TTRC("Output"));
+	set_name(TTRC("Output Log"));
+	set_layout_key(StrataLayout::KEY_OUTPUT_LOG);
 	set_icon_name("Output");
-	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("bottom_panels/toggle_output_bottom_panel", TTRC("Toggle Output Dock"), KeyModifierMask::ALT | Key::O));
+	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("bottom_panels/toggle_output_bottom_panel", TTRC("Toggle Output Log Dock"), KeyModifierMask::ALT | Key::O));
 	set_default_slot(EditorDock::DOCK_SLOT_BOTTOM);
 	set_available_layouts(EditorDock::DOCK_LAYOUT_HORIZONTAL | EditorDock::DOCK_LAYOUT_FLOATING);
 	set_process_shortcut_input(true);

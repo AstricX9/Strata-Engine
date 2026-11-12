@@ -45,6 +45,7 @@
 #include "editor/script/script_editor_plugin.h"
 #include "editor/settings/editor_command_palette.h"
 #include "editor/settings/editor_settings.h"
+#include "editor/strata/strata_layout.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/box_container.h"
 
@@ -705,10 +706,11 @@ void InspectorDock::shortcut_input(const Ref<InputEvent> &p_event) {
 
 InspectorDock::InspectorDock(EditorData &p_editor_data) {
 	singleton = this;
-	set_name(TTRC("Inspector"));
+	set_name(TTRC("Details"));
+	set_layout_key(StrataLayout::KEY_DETAILS);
 	set_icon_name("AnimationTrackList");
-	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_inspector", TTRC("Open Inspector Dock")));
-	set_default_slot(EditorDock::DOCK_SLOT_RIGHT_UL);
+	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_inspector", TTRC("Open Details Dock")));
+	set_default_slot(EditorDock::DOCK_SLOT_RIGHT_BL);
 
 	VBoxContainer *main_vb = memnew(VBoxContainer);
 	add_child(main_vb);
