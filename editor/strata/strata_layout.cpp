@@ -80,3 +80,11 @@ String StrataLayout::get_bottom_dock_order(const PackedStringArray &p_bottom_doc
 	}
 	return String(",").join(ordered);
 }
+
+bool StrataLayout::needs_strata_layout(const Ref<ConfigFile> &p_layout) {
+	return int(p_layout->get_value("docks", LAYOUT_VERSION_KEY, 0)) < LAYOUT_VERSION;
+}
+
+void StrataLayout::mark_strata_layout(const Ref<ConfigFile> &p_layout) {
+	p_layout->set_value("docks", LAYOUT_VERSION_KEY, LAYOUT_VERSION);
+}

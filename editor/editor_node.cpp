@@ -6287,6 +6287,7 @@ void EditorNode::_save_editor_layout() {
 	config->load(EditorPaths::get_singleton()->get_project_settings_dir().path_join("editor_layout.cfg"));
 
 	editor_dock_manager->save_docks_to_config(config, "docks");
+	StrataLayout::mark_strata_layout(config);
 	_save_open_scenes_to_config(config);
 	_save_central_editor_layout_to_config(config);
 	_save_window_settings_to_config(config, "EditorWindow");
@@ -6339,7 +6340,13 @@ void EditorNode::_load_editor_layout() {
 		_layout_menu_option(LAYOUT_DEFAULT);
 	} else {
 		ep.step(TTR("Loading docks..."), 1, true);
-		editor_dock_manager->load_docks_from_config(config, "docks", true);
+		if (StrataLayout::needs_strata_layout(config)) {
+			// Saved by Godot or an older Strata layout: switch to the Strata default once; later saves keep the user's changes.
+			bottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);
+			_layout_menu_option(LAYOUT_DEFAULT);
+		} else {
+			editor_dock_manager->load_docks_from_config(config, "docks", true);
+		}
 
 		ep.step(TTR("Reopening scenes..."), 2, true);
 		_load_open_scenes_from_config(config);

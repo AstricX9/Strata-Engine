@@ -81,6 +81,21 @@ TEST_CASE("[Strata][Layout] Content Browser starts open with a usable height") {
 	CHECK(int(offsets.get("Audio", 0)) == -450);
 }
 
+TEST_CASE("[Strata][Layout] Layouts saved by Godot switch to the Strata layout once") {
+	Ref<ConfigFile> godot_layout;
+	godot_layout.instantiate();
+	godot_layout->set_value("docks", "dock_3", "Scene,Import"); // Plain Godot: Scene dock on the left.
+	CHECK(StrataLayout::needs_strata_layout(godot_layout));
+
+	StrataLayout::mark_strata_layout(godot_layout);
+	CHECK_FALSE(StrataLayout::needs_strata_layout(godot_layout)); // The user's own changes are kept from now on.
+
+	Ref<ConfigFile> older_strata;
+	older_strata.instantiate();
+	older_strata->set_value("docks", StrataLayout::LAYOUT_VERSION_KEY, StrataLayout::LAYOUT_VERSION - 1);
+	CHECK(StrataLayout::needs_strata_layout(older_strata)); // A Strata layout change switches projects once more.
+}
+
 } // namespace TestStrataLayout
 
 #endif // TOOLS_ENABLED
