@@ -107,6 +107,19 @@ Document tab bar replaces both the 2D/3D/Script/AssetLib buttons and the scene t
 
 Underlying editor plugins and scene handling are unchanged; only the switching UI is new.
 
+### Title bar (milestone 3c, added 2026-11-13)
+
+As in UE4, the editor draws its own title bar and the document tabs live in it:
+- Row 1 (title row): Strata logo, document tabs (levels + tool tabs), drag space,
+  minimise / maximise / close. Double-click on drag space maximises or restores.
+- Row 2: menu bar (Scene, Project, Debug, Editor, Help), then the toolbar as before.
+- Windows: Godot's "extend to title" is implemented for Windows (it was macOS-only):
+  the client area covers the native caption via `WM_NCCALCSIZE`, while `WM_NCHITTEST`
+  keeps native resize edges, so the shadow and Aero Snap stay.
+- Other platforms keep their current behaviour; the title row falls back to the native
+  title bar where extend-to-title is unavailable.
+- Known gap: the Windows 11 snap-layout flyout on hovering maximise is not provided.
+
 ## 4. Docks
 
 ### Place Actors (`place_actors_dock`)
@@ -248,7 +261,7 @@ the user's 4.26 reference screenshot):
 
 1. Theme
 2. Default layout + dock names
-3. Toolbar + document tabs
+3. Toolbar + document tabs (3a toolbar, 3b document tabs, 3c custom title bar)
 4. World Outliner (incl. folders) + Details
 5. Content Browser
 6. Place Actors
