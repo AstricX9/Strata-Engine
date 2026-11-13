@@ -144,6 +144,7 @@
 #include "editor/settings/project_settings_editor.h"
 #include "editor/shader/editor_native_shader_source_visualizer.h"
 #include "editor/shader/text_shader_editor.h"
+#include "editor/strata/strata_document_tabs.h"
 #include "editor/strata/strata_layout.h"
 #include "editor/strata/strata_toolbar.h"
 #include "editor/themes/editor_color_map.h"
@@ -9095,6 +9096,10 @@ EditorNode::EditorNode() {
 	editor_main_screen->set_button_container(main_editor_button_hb);
 	title_bar->add_child(main_editor_button_hb);
 	title_bar->set_center_control(main_editor_button_hb);
+	// Strata: screens are switched with document tabs; the buttons stay as EditorMainScreen's (hidden) container.
+	main_editor_button_hb->hide();
+	StrataDocumentTabs *document_tabs = memnew(StrataDocumentTabs);
+	document_tabs->setup(scene_tabs, editor_main_screen);
 
 	// Spacer to center 2D / 3D / Script buttons.
 	right_spacer = memnew(Control);

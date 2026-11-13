@@ -205,6 +205,11 @@ void EditorMainScreen::select(int p_index) {
 	}
 
 	EditorNode::get_singleton()->update_distraction_free_mode();
+	emit_signal(SNAME("screen_changed"), p_index);
+}
+
+void EditorMainScreen::_bind_methods() {
+	ADD_SIGNAL(MethodInfo("screen_changed", PropertyInfo(Variant::INT, "index")));
 }
 
 int EditorMainScreen::get_selected_index() const {

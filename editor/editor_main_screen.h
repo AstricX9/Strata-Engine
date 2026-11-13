@@ -63,6 +63,7 @@ private:
 
 protected:
 	void _notification(int p_what);
+	static void _bind_methods();
 
 public:
 	void set_button_container(HBoxContainer *p_button_hb);
@@ -81,6 +82,9 @@ public:
 	int get_plugin_index(EditorPlugin *p_editor) const;
 	EditorPlugin *get_selected_plugin() const;
 	EditorPlugin *get_plugin_by_name(const String &p_plugin_name) const;
+	// Strata document tabs list every main screen, including ones added by plugins.
+	int get_plugin_count() const { return editor_table.size(); }
+	EditorPlugin *get_plugin_at(int p_index) const { return editor_table[p_index]; }
 	bool can_auto_switch_screens() const;
 
 	VBoxContainer *get_control() const;

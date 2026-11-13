@@ -430,6 +430,11 @@ void EditorSceneTabs::add_extra_button(Button *p_button) {
 	tabbar_container->add_child(p_button);
 }
 
+void EditorSceneTabs::add_after_tabs(Control *p_control) {
+	tabbar_container->add_child(p_control);
+	tabbar_container->move_child(p_control, scene_tabs->get_index() + 1);
+}
+
 void EditorSceneTabs::set_current_tab(int p_tab) {
 	scene_tabs->set_current_tab(p_tab);
 }

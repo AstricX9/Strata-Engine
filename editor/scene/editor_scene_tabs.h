@@ -105,6 +105,9 @@ public:
 	static EditorSceneTabs *get_singleton() { return singleton; }
 
 	void add_extra_button(Button *p_button);
+	// Strata: the level TabBar, and a slot right after it for the tool tabs.
+	TabBar *get_tab_bar() const { return scene_tabs; }
+	void add_after_tabs(Control *p_control);
 
 	void set_current_tab(int p_tab);
 	int get_current_tab() const;
