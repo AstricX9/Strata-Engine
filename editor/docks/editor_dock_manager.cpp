@@ -31,6 +31,7 @@
 #include "editor_dock_manager.h"
 
 #include "core/object/callable_mp.h"
+#include "core/templates/hash_map.h"
 #include "editor/docks/dock_tab_container.h"
 #include "editor/docks/editor_dock.h"
 #include "editor/editor_node.h"
@@ -495,13 +496,19 @@ void EditorDockManager::save_docks_to_config(Ref<ConfigFile> p_layout, const Str
 			}
 		}
 
-		PackedInt32Array split_offsets = main_hsplit->get_split_offsets();
-		int index = 0;
+		// Strata: dock columns can sit in more than one horizontal split (left ones beside the viewport,
+		// right ones beside the viewport and Content Browser), so offsets are counted per parent split.
+		HashMap<DockSplitContainer *, int> next_offset;
 		for (int i = 0; i < vsplits.size(); i++) {
 			int value = 0;
-			if (vsplits[i]->is_visible() && index < split_offsets.size()) {
-				value = split_offsets[index] / EDSCALE;
-				index++;
+			DockSplitContainer *parent = Object::cast_to<DockSplitContainer>(vsplits[i]->get_parent());
+			if (vsplits[i]->is_visible() && parent) {
+				const PackedInt32Array split_offsets = parent->get_split_offsets();
+				int &index = next_offset[parent];
+				if (index < split_offsets.size()) {
+					value = split_offsets[index] / EDSCALE;
+					index++;
+				}
 			}
 			p_layout->set_value(p_section, "dock_hsplit_" + itos(i + 1), value);
 		}
@@ -586,6 +593,15 @@ void EditorDockManager::load_docks_from_config(Ref<ConfigFile> p_layout, const S
 	// Load SplitContainer offsets.
 
 	PackedInt32Array offsets;
+	// Strata: offsets are collected per parent split (see save_docks_to_config).
+	LocalVector<DockSplitContainer *> hsplits = { main_hsplit };
+	HashMap<DockSplitContainer *, PackedInt32Array> hsplit_offsets;
+	for (int i = 0; i < vsplits.size(); i++) {
+		DockSplitContainer *parent = Object::cast_to<DockSplitContainer>(vsplits[i]->get_parent());
+		if (parent && !hsplits.has(parent)) {
+			hsplits.push_back(parent);
+		}
+	}
 
 	for (int i = 0; i < vsplits.size(); i++) {
 		if (!p_layout->has_section_key(p_section, "dock_split_" + itos(i + 1))) {
@@ -594,13 +610,16 @@ void EditorDockManager::load_docks_from_config(Ref<ConfigFile> p_layout, const S
 		int ofs = p_layout->get_value(p_section, "dock_split_" + itos(i + 1));
 		vsplits[i]->set_split_offset(ofs);
 
-		// Only visible ones need a split offset for the main hsplit, even though they all have a value saved.
-		if (vsplits[i]->is_visible() && p_layout->has_section_key(p_section, "dock_hsplit_" + itos(i + 1))) {
+		// Only visible ones need a split offset for their hsplit, even though they all have a value saved.
+		DockSplitContainer *parent = Object::cast_to<DockSplitContainer>(vsplits[i]->get_parent());
+		if (parent && vsplits[i]->is_visible() && p_layout->has_section_key(p_section, "dock_hsplit_" + itos(i + 1))) {
 			int offset = p_layout->get_value(p_section, "dock_hsplit_" + itos(i + 1));
-			offsets.push_back(offset * EDSCALE);
+			hsplit_offsets[parent].push_back(offset * EDSCALE);
 		}
 	}
-	main_hsplit->set_split_offsets(offsets);
+	for (DockSplitContainer *hsplit : hsplits) {
+		hsplit->set_split_offsets(hsplit_offsets.has(hsplit) ? hsplit_offsets[hsplit] : PackedInt32Array());
+	}
 
 	// The main v-split contains only one singular split.
 	if (main_vsplit->get_child_as_control(1)->is_visible()) {

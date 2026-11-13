@@ -8708,10 +8708,27 @@ EditorNode::EditorNode() {
 	main_vsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	main_vbox->add_child(main_vsplit);
 
+	// UE4 layout: the right column runs full height beside everything else, and the Content Browser
+	// (bottom panel) runs under both the left column and the viewport.
+	// main_vsplit [ right_hsplit [ center_split [ main_hsplit [ left_l, left_r, center ], bottom panel ], right_l, right_r ], bottom docks ]
+	right_hsplit = memnew(DockSplitContainer);
+	right_hsplit->set_name("DockHSplitRight");
+	right_hsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	main_vsplit->add_child(right_hsplit);
+
+	center_split = memnew(DockSplitContainer);
+	center_split->set_name("DockVSplitCenter");
+	center_split->set_vertical(true);
+	center_split->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	center_split->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	center_split->set_collapsed(true);
+	right_hsplit->add_child(center_split);
+	center_split->connect("drag_ended", callable_mp(this, &EditorNode::_bottom_panel_resized));
+
 	main_hsplit = memnew(DockSplitContainer);
 	main_hsplit->set_name("DockHSplitMain");
 	main_hsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	main_vsplit->add_child(main_hsplit);
+	center_split->add_child(main_hsplit);
 
 	left_l_vsplit = memnew(DockSplitContainer);
 	left_l_vsplit->set_name("DockVSplitLeftL");
@@ -8752,19 +8769,12 @@ EditorNode::EditorNode() {
 	VBoxContainer *center_vb = memnew(VBoxContainer);
 	center_vb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	main_hsplit->add_child(center_vb);
-
-	center_split = memnew(DockSplitContainer);
-	center_split->set_name("DockVSplitCenter");
-	center_split->set_vertical(true);
-	center_split->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	center_split->set_collapsed(true);
-	center_vb->add_child(center_split);
-	center_split->connect("drag_ended", callable_mp(this, &EditorNode::_bottom_panel_resized));
+	center_vb_strata = center_vb;
 
 	right_l_vsplit = memnew(DockSplitContainer);
 	right_l_vsplit->set_name("DockVSplitRightL");
 	right_l_vsplit->set_vertical(true);
-	main_hsplit->add_child(right_l_vsplit);
+	right_hsplit->add_child(right_l_vsplit);
 	{
 		DockTabContainer *dock_container = memnew(SideDockTabContainer(EditorDock::DOCK_SLOT_RIGHT_UL, Rect2i(6, 0, 1, 3)));
 		dock_container->set_name("DockSlotRightUL");
@@ -8781,7 +8791,7 @@ EditorNode::EditorNode() {
 	right_r_vsplit = memnew(DockSplitContainer);
 	right_r_vsplit->set_name("DockVSplitRightR");
 	right_r_vsplit->set_vertical(true);
-	main_hsplit->add_child(right_r_vsplit);
+	right_hsplit->add_child(right_r_vsplit);
 	{
 		DockTabContainer *dock_container = memnew(SideDockTabContainer(EditorDock::DOCK_SLOT_RIGHT_UR, Rect2i(7, 0, 1, 3)));
 		dock_container->set_name("DockSlotRightUR");
@@ -8840,7 +8850,7 @@ EditorNode::EditorNode() {
 	add_child(scan_changes_timer);
 
 	top_split = memnew(VSplitContainer);
-	center_split->add_child(top_split);
+	center_vb_strata->add_child(top_split);
 	top_split->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	top_split->set_collapsed(true);
 
@@ -9207,8 +9217,8 @@ EditorNode::EditorNode() {
 	history_dock = memnew(HistoryDock);
 	editor_dock_manager->add_dock(history_dock);
 
-	// By default only the viewport and the right column are visible, so set one split offset for it.
-	main_hsplit->set_split_offsets({ 0, int(-StrataLayout::RIGHT_COLUMN_WIDTH * EDSCALE) });
+	// By default only the centre and the right column are visible, so set one split offset for it.
+	right_hsplit->set_split_offsets({ int(-StrataLayout::RIGHT_COLUMN_WIDTH * EDSCALE) });
 
 	// Define corresponding default layout.
 

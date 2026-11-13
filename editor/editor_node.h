@@ -305,6 +305,8 @@ private:
 	DockSplitContainer *left_l_vsplit = nullptr;
 	DockSplitContainer *left_r_vsplit = nullptr;
 	DockSplitContainer *main_hsplit = nullptr;
+	DockSplitContainer *right_hsplit = nullptr; // Strata: right column beside the centre and Content Browser.
+	VBoxContainer *center_vb_strata = nullptr;
 	DockSplitContainer *right_l_vsplit = nullptr;
 	DockSplitContainer *right_r_vsplit = nullptr;
 	DockSplitContainer *center_split = nullptr;
