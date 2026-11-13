@@ -39,7 +39,7 @@
 StrataThemePreset StrataTheme::get_default_preset() {
 	StrataThemePreset preset;
 	// UE4's scheme: neutral grey panels, orange-gold selection, green main actions.
-	preset.base_color = Color(0.141, 0.141, 0.141);
+	preset.base_color = Color(0.2, 0.2, 0.2);
 	preset.accent_color = Color(0.89, 0.62, 0.11);
 	preset.primary_color = Color(0.22, 0.52, 0.14);
 	preset.contrast = 0.25;
@@ -91,7 +91,7 @@ void StrataTheme::populate_overrides(const Ref<EditorTheme> &p_theme, EditorThem
 	// Text fields sit lighter than their panel, as in UE4.
 	Ref<StyleBoxFlat> field = p_theme->has_stylebox("normal", "LineEdit") ? p_theme->get_stylebox("normal", "LineEdit") : Ref<StyleBox>();
 	field = field.is_valid() ? Ref<StyleBoxFlat>(field->duplicate()) : Ref<StyleBoxFlat>(p_config.base_style->duplicate());
-	field->set_bg_color(p_config.base_color.lightened(0.18));
+	field->set_bg_color(p_config.base_color.lightened(0.22));
 	p_theme->set_stylebox("normal", "LineEdit", field);
 
 	// Primary action buttons (Add Component, Add/Import, Open Project) and the Play icon are green, as in UE4.

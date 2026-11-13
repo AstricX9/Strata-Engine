@@ -43,7 +43,7 @@ namespace TestStrataTheme {
 TEST_CASE("[Strata][Theme] Default preset is Strata's own") {
 	const StrataThemePreset p = StrataTheme::get_default_preset();
 	// UE4's scheme: neutral grey panels, orange-gold accent, green primary actions.
-	CHECK(p.base_color.is_equal_approx(Color(0.141, 0.141, 0.141)));
+	CHECK(p.base_color.is_equal_approx(Color(0.2, 0.2, 0.2)));
 	CHECK(p.accent_color.is_equal_approx(Color(0.89, 0.62, 0.11)));
 	CHECK(p.primary_color.is_equal_approx(Color(0.22, 0.52, 0.14)));
 	CHECK(p.contrast == doctest::Approx(0.25));
@@ -83,7 +83,7 @@ static Ref<EditorTheme> make_theme(EditorThemeManager::ThemeConfiguration &r_con
 	theme.instantiate();
 	r_config.base_style.instantiate();
 	r_config.button_style.instantiate();
-	r_config.base_color = Color(0.141, 0.141, 0.141);
+	r_config.base_color = Color(0.2, 0.2, 0.2);
 	r_config.accent_color = Color(0.89, 0.62, 0.11);
 	StrataTheme::populate_overrides(theme, r_config);
 	return theme;
@@ -103,7 +103,7 @@ TEST_CASE("[Strata][Theme] Text fields are lighter than the panels") {
 	Ref<EditorTheme> theme = make_theme(config);
 	Ref<StyleBoxFlat> field = theme->get_stylebox("normal", "LineEdit");
 	REQUIRE(field.is_valid());
-	CHECK(field->get_bg_color().get_luminance() > config.base_color.get_luminance() + 0.05);
+	CHECK(field->get_bg_color().get_luminance() > config.base_color.get_luminance() + 0.1);
 }
 
 } // namespace TestStrataTheme
