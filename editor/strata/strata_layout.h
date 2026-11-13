@@ -52,7 +52,8 @@ inline constexpr const char *KEY_OUTPUT_LOG = "Output";
 inline constexpr int RIGHT_COLUMN_WIDTH = 380;
 // Saved layouts carry this version. A layout without it (saved by Godot) or with an older one gets the Strata default once.
 inline constexpr const char *LAYOUT_VERSION_KEY = "strata_layout_version";
-inline constexpr int LAYOUT_VERSION = 1;
+inline constexpr int LAYOUT_VERSION = 2; // 2: Content Browser opens as a thumbnail grid.
+inline constexpr int CONTENT_BROWSER_THUMBNAIL_SIZE = 96;
 
 void fill_default_layout(const Ref<ConfigFile> &p_layout, const StrataDockKeys &p_keys, int p_vsplit_count);
 String get_bottom_dock_order(const PackedStringArray &p_bottom_docks);

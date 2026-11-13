@@ -96,6 +96,15 @@ TEST_CASE("[Strata][Layout] Layouts saved by Godot switch to the Strata layout o
 	CHECK(StrataLayout::needs_strata_layout(older_strata)); // A Strata layout change switches projects once more.
 }
 
+TEST_CASE("[Strata][Layout] Content Browser opens as a grid of large thumbnails") {
+	Ref<ConfigFile> cfg;
+	cfg.instantiate();
+	StrataLayout::fill_default_layout(cfg, { "Scene", "Inspector", "Import", "Signals", "Groups", "History" }, 4);
+	CHECK(int(cfg->get_value("docks/FileSystem", "file_list_display_mode", -1)) == 0); // FileSystemDock::FILE_LIST_DISPLAY_THUMBNAILS.
+	CHECK(StrataLayout::CONTENT_BROWSER_THUMBNAIL_SIZE == 96);
+	CHECK(StrataLayout::LAYOUT_VERSION >= 2); // Projects already on the Strata layout pick up the grid once.
+}
+
 } // namespace TestStrataLayout
 
 #endif // TOOLS_ENABLED

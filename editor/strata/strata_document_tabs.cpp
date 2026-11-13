@@ -109,6 +109,51 @@ void StrataDocumentTabs::_rebuild() {
 	}
 	updating = false;
 	_sync_selection();
+	_queue_fit_levels();
+}
+
+void StrataDocumentTabs::_queue_fit_levels() {
+	if (!fitting) {
+		callable_mp(this, &StrataDocumentTabs::_fit_levels).call_deferred();
+	}
+}
+
+void StrataDocumentTabs::_fit_levels() {
+	// The level strip is only as wide as its tabs, so the tool tabs follow right after (as in UE4).
+	// When the levels don't fit, it clips and scrolls in whatever space is left.
+	TabBar *levels = scene_tabs->get_tab_bar();
+	Control *row = Object::cast_to<Control>(levels->get_parent());
+	ERR_FAIL_NULL(row);
+	// Fitting itself changes the strip's minimum size, which queues another fit: stop when nothing changed.
+	String signature = itos(row->get_size().x) + "|" + itos(get_tab_count());
+	for (int i = 0; i < levels->get_tab_count(); i++) {
+		signature += "|" + levels->get_tab_title(i);
+	}
+	if (signature == fitted_for) {
+		return;
+	}
+	fitted_for = signature;
+	fitting = true;
+	levels->set_clip_tabs(false);
+	const real_t all_tabs = levels->get_minimum_size().x;
+	levels->set_clip_tabs(true);
+
+	real_t others = 0;
+	int visible_children = 0;
+	for (int i = 0; i < row->get_child_count(); i++) {
+		Control *child = Object::cast_to<Control>(row->get_child(i));
+		if (!child || !child->is_visible() || child->is_set_as_top_level()) {
+			continue;
+		}
+		visible_children++;
+		if (child != levels && child != row_spacer) {
+			others += child->get_combined_minimum_size().x;
+		}
+	}
+	const real_t separation = row->get_theme_constant(SNAME("separation"), SNAME("HBoxContainer")) * MAX(visible_children - 1, 0);
+	const real_t room = MAX(row->get_size().x - others - separation, (real_t)0);
+	levels->set_custom_minimum_size(Size2(MIN(all_tabs, room), 0));
+	fitting = false;
 }
 
 void StrataDocumentTabs::_sync_selection() {
@@ -213,7 +258,17 @@ void StrataDocumentTabs::setup(EditorSceneTabs *p_scene_tabs, EditorMainScreen *
 	set_tab_close_display_policy(CLOSE_BUTTON_SHOW_ACTIVE_ONLY);
 	set_clip_tabs(false); // Show every tool tab, not one with scroll arrows.
 	set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
+	// Row: [levels][tool tabs][spacer][+, scene list, ...]. The spacer takes the slack the level strip used to.
+	row_spacer = memnew(Control);
+	row_spacer->set_h_size_flags(SIZE_EXPAND_FILL);
+	row_spacer->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	scene_tabs->add_after_tabs(row_spacer);
 	scene_tabs->add_after_tabs(this);
+	TabBar *levels = scene_tabs->get_tab_bar();
+	levels->set_h_size_flags(SIZE_FILL);
+	levels->connect(SceneStringName(minimum_size_changed), callable_mp(this, &StrataDocumentTabs::_queue_fit_levels));
+	levels->connect("tab_changed", callable_mp(this, &StrataDocumentTabs::_queue_fit_levels).unbind(1));
+	levels->get_parent()->connect(SceneStringName(resized), callable_mp(this, &StrataDocumentTabs::_queue_fit_levels));
 
 	connect("tab_changed", callable_mp(this, &StrataDocumentTabs::_tab_selected));
 	connect("tab_close_pressed", callable_mp(this, &StrataDocumentTabs::_tab_closed));

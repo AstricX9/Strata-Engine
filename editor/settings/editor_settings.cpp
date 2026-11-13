@@ -59,6 +59,7 @@
 #include "scene/gui/file_dialog.h"
 #include "scene/main/node.h"
 #include "scene/main/scene_tree.h"
+#include "editor/strata/strata_layout.h"
 #include "editor/strata/strata_theme.h"
 #include "scene/resources/animation.h"
 #include "servers/display/display_server.h"
@@ -712,7 +713,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	_initial_set("docks/scene_tree/accessibility_warnings", false);
 
 	// FileSystem
-	EDITOR_SETTING(Variant::INT, PROPERTY_HINT_RANGE, "docks/filesystem/thumbnail_size", 64, "32,128,16")
+	EDITOR_SETTING(Variant::INT, PROPERTY_HINT_RANGE, "docks/filesystem/thumbnail_size", StrataLayout::CONTENT_BROWSER_THUMBNAIL_SIZE, "32,128,16")
 	_initial_set("docks/filesystem/always_show_folders", true);
 	_initial_set("docks/filesystem/textfile_extensions", "txt,md,cfg,ini,log,json,yml,yaml,toml,xml");
 	_initial_set("docks/filesystem/other_file_extensions", "ico,icns");
@@ -1326,6 +1327,20 @@ void EditorSettings::_handle_setting_compatibility() {
 	_rename_setting("interface/editor/update_continuously", "interface/editor/display/update_continuously");
 	_rename_setting("interface/editor/collapse_main_menu", "interface/editor/appearance/collapse_main_menu");
 	_rename_setting("asset_library/use_threads", "asset_store/use_threads");
+
+	// Strata, once: settings still at earlier Strata defaults (12px font, 64px Content Browser thumbnails)
+	// move to the current ones. Values the user chose are left alone, and later changes are never undone.
+	const String strata_version_key = "interface/strata/settings_version";
+	add_property_hint(PropertyInfo(Variant::INT, strata_version_key, PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR));
+	if (int(has_setting(strata_version_key) ? get_setting(strata_version_key) : Variant(0)) < 2) {
+		if (has_setting("interface/editor/fonts/main_font_size") && int(get_setting("interface/editor/fonts/main_font_size")) == 12) {
+			set_setting("interface/editor/fonts/main_font_size", StrataTheme::get_default_preset().main_font_size);
+		}
+		if (has_setting("docks/filesystem/thumbnail_size") && int(get_setting("docks/filesystem/thumbnail_size")) == 64) {
+			set_setting("docks/filesystem/thumbnail_size", StrataLayout::CONTENT_BROWSER_THUMBNAIL_SIZE);
+		}
+		set_setting(strata_version_key, 2);
+	}
 }
 
 void EditorSettings::_rename_setting(const String &p_old_name, const String &p_new_name) {

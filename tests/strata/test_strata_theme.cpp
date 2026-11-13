@@ -52,10 +52,10 @@ TEST_CASE("[Strata][Theme] Default preset is Strata's own") {
 	CHECK(p.contrast == doctest::Approx(0.25));
 	CHECK(p.icon_saturation == doctest::Approx(2.0));
 	CHECK(p.corner_radius == 2);
-	CHECK(p.base_spacing == 2);
+	CHECK(p.base_spacing == 3);
 	CHECK(p.extra_spacing == 2);
 	CHECK(p.dialogs_buttons_min_size == Size2(90, 26));
-	CHECK(p.main_font_size == 12);
+	CHECK(p.main_font_size == 14); // Godot's own size; 12 read as too small.
 }
 
 TEST_CASE("[Strata][Theme] Inspector category bar keeps extra borders (Black OLED preset)") {

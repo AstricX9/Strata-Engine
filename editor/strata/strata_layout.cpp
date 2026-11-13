@@ -56,6 +56,8 @@ void StrataLayout::fill_default_layout(const Ref<ConfigFile> &p_layout, const St
 	offsets[KEY_OUTPUT_LOG] = -270;
 	offsets["Audio"] = -450;
 	p_layout->set_value("EditorNode", "bottom_panel_offsets", offsets);
+	// UE4's Content Browser is a grid of thumbnails (0 = FileSystemDock::FILE_LIST_DISPLAY_THUMBNAILS).
+	p_layout->set_value(String("docks/") + KEY_CONTENT_BROWSER, "file_list_display_mode", 0);
 
 	const int hsplits[] = { 0, 0, -RIGHT_COLUMN_WIDTH, 0 };
 	for (int i = 0; i < 4; i++) {

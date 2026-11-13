@@ -48,10 +48,10 @@ StrataThemePreset StrataTheme::get_default_preset() {
 	preset.contrast = 0.25;
 	preset.icon_saturation = 2.0;
 	preset.corner_radius = 2;
-	preset.base_spacing = 2;
+	preset.base_spacing = 3;
 	preset.extra_spacing = 2;
 	preset.dialogs_buttons_min_size = Size2(90, 26);
-	preset.main_font_size = 12;
+	preset.main_font_size = 14;
 	return preset;
 }
 

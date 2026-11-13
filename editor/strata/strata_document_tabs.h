@@ -70,6 +70,9 @@ private:
 	ToolState state;
 	Vector<TabEntry> shown;
 	bool updating = false;
+	bool fitting = false;
+	String fitted_for; // Tabs and row width the level strip was last fitted to.
+	Control *row_spacer = nullptr;
 
 	int _screen_for(const TabEntry &p_entry) const;
 	void _rebuild();
@@ -80,6 +83,8 @@ private:
 	void _tab_selected(int p_tab);
 	void _tab_closed(int p_tab);
 	void _level_clicked(int p_tab);
+	void _queue_fit_levels();
+	void _fit_levels();
 
 protected:
 	void _notification(int p_what);
