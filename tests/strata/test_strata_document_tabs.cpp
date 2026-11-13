@@ -81,6 +81,26 @@ TEST_CASE("[Strata][DocumentTabs] Dismissed or disabled tools stay hidden") {
 	CHECK(Tabs::get_visible_tools(market).is_empty());
 }
 
+TEST_CASE("[Strata][DocumentTabs] Game tab shows while playing or on the Game screen, unless disabled") {
+	Tabs::ToolState state;
+	state.game_selected = true; // Ctrl+F4 without playing.
+	REQUIRE(Tabs::get_visible_tools(state).size() == 1);
+	CHECK(Tabs::get_visible_tools(state)[0].tool == Tabs::TOOL_GAME);
+
+	state.game_selected = false;
+	state.playing = true;
+	state.game_enabled = false; // Feature profile, or recovery mode where there is no Game screen.
+	CHECK(Tabs::get_visible_tools(state).is_empty());
+}
+
+TEST_CASE("[Strata][DocumentTabs] Only 2D and 3D are level screens") {
+	CHECK_FALSE(Tabs::is_tool_screen(EditorMainScreen::EDITOR_2D));
+	CHECK_FALSE(Tabs::is_tool_screen(EditorMainScreen::EDITOR_3D));
+	CHECK(Tabs::is_tool_screen(EditorMainScreen::EDITOR_SCRIPT));
+	CHECK(Tabs::is_tool_screen(EditorMainScreen::EDITOR_GAME));
+	CHECK(Tabs::is_tool_screen(EditorMainScreen::EDITOR_ASSETLIB + 2)); // A plugin screen.
+}
+
 TEST_CASE("[SceneTree][Strata][DocumentTabs] Levels open in the 2D or 3D editor by their root") {
 	Node3D *node_3d = memnew(Node3D);
 	Node2D *node_2d = memnew(Node2D);

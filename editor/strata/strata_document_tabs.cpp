@@ -36,6 +36,7 @@
 #include "editor/plugins/editor_plugin.h"
 #include "editor/run/editor_run_bar.h"
 #include "editor/scene/editor_scene_tabs.h"
+#include "editor/settings/editor_feature_profile.h"
 #include "editor/script/script_editor_plugin.h"
 #include "scene/main/canvas_item.h"
 
@@ -47,13 +48,17 @@ Vector<StrataDocumentTabs::TabEntry> StrataDocumentTabs::get_visible_tools(const
 	if (p_state.marketplace_enabled && p_state.marketplace_open) {
 		tabs.push_back({ TOOL_MARKETPLACE, -1 });
 	}
-	if (p_state.playing) {
+	if (p_state.game_enabled && (p_state.playing || p_state.game_selected)) {
 		tabs.push_back({ TOOL_GAME, -1 });
 	}
 	for (int i = 0; i < p_state.plugin_screens; i++) {
 		tabs.push_back({ TOOL_PLUGIN, i });
 	}
 	return tabs;
+}
+
+bool StrataDocumentTabs::is_tool_screen(int p_screen) {
+	return p_screen != EditorMainScreen::EDITOR_2D && p_screen != EditorMainScreen::EDITOR_3D;
 }
 
 int StrataDocumentTabs::level_screen(const Node *p_root) {
@@ -87,6 +92,8 @@ void StrataDocumentTabs::_rebuild() {
 	state.script_enabled = screen_count > EditorMainScreen::EDITOR_SCRIPT && main_screen->is_button_enabled(EditorMainScreen::EDITOR_SCRIPT);
 	state.scripts_open = (script_editor && !script_editor->get_open_scripts().is_empty()) || main_screen->get_selected_index() == EditorMainScreen::EDITOR_SCRIPT;
 	state.marketplace_enabled = screen_count > EditorMainScreen::EDITOR_ASSETLIB && main_screen->is_button_enabled(EditorMainScreen::EDITOR_ASSETLIB);
+	state.game_enabled = screen_count > EditorMainScreen::EDITOR_GAME && main_screen->is_button_enabled(EditorMainScreen::EDITOR_GAME);
+	state.game_selected = main_screen->get_selected_index() == EditorMainScreen::EDITOR_GAME;
 	state.playing = EditorRunBar::get_singleton() && EditorRunBar::get_singleton()->is_playing();
 	state.plugin_screens = MAX(0, screen_count - BUILTIN_SCREENS);
 
@@ -94,10 +101,11 @@ void StrataDocumentTabs::_rebuild() {
 	shown = get_visible_tools(state);
 	clear_tabs();
 	for (const TabEntry &entry : shown) {
-		EditorPlugin *plugin = main_screen->get_plugin_at(_screen_for(entry));
+		const int screen = _screen_for(entry);
+		ERR_CONTINUE(screen >= screen_count);
 		// UE4 calls the asset store the Marketplace.
-		const String title = entry.tool == TOOL_MARKETPLACE ? TTR("Marketplace") : plugin->get_plugin_name();
-		add_tab(title, plugin->get_plugin_icon());
+		const String title = entry.tool == TOOL_MARKETPLACE ? TTR("Marketplace") : main_screen->get_plugin_at(screen)->get_plugin_name();
+		add_tab(title, main_screen->get_screen_icon(screen));
 	}
 	updating = false;
 	_sync_selection();
@@ -139,7 +147,15 @@ void StrataDocumentTabs::_screen_changed(int p_index) {
 }
 
 void StrataDocumentTabs::_tab_selected(int p_tab) {
-	if (updating || p_tab < 0 || p_tab >= shown.size()) {
+	if (updating) {
+		return;
+	}
+	if (p_tab < 0) {
+		// Clicking the active tab deselects it; the tool screen is still showing, so select it again.
+		_sync_selection();
+		return;
+	}
+	if (p_tab >= shown.size()) {
 		return;
 	}
 	main_screen->select(_screen_for(shown[p_tab]));
@@ -167,7 +183,7 @@ void StrataDocumentTabs::_tab_closed(int p_tab) {
 }
 
 void StrataDocumentTabs::_level_clicked(int p_tab) {
-	if (get_current_tab() >= 0) {
+	if (is_tool_screen(main_screen->get_selected_index())) {
 		_show_level();
 	}
 }
@@ -184,6 +200,8 @@ void StrataDocumentTabs::_notification(int p_what) {
 		run_bar->connect("play_pressed", callable_mp(this, &StrataDocumentTabs::_queue_rebuild));
 		run_bar->connect("stop_pressed", callable_mp(this, &StrataDocumentTabs::_queue_rebuild));
 	}
+	// Deferred so it runs after EditorNode applies the profile to the main screen buttons.
+	EditorFeatureProfileManager::get_singleton()->connect("current_feature_profile_changed", callable_mp(this, &StrataDocumentTabs::_queue_rebuild));
 	_queue_rebuild();
 }
 
@@ -193,11 +211,14 @@ void StrataDocumentTabs::setup(EditorSceneTabs *p_scene_tabs, EditorMainScreen *
 	set_name("StrataDocumentTabs");
 	set_deselect_enabled(true);
 	set_tab_close_display_policy(CLOSE_BUTTON_SHOW_ACTIVE_ONLY);
+	set_clip_tabs(false); // Show every tool tab, not one with scroll arrows.
 	set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	scene_tabs->add_after_tabs(this);
 
 	connect("tab_changed", callable_mp(this, &StrataDocumentTabs::_tab_selected));
 	connect("tab_close_pressed", callable_mp(this, &StrataDocumentTabs::_tab_closed));
 	main_screen->connect("screen_changed", callable_mp(this, &StrataDocumentTabs::_screen_changed));
+	// Plugins adding or removing a main screen (rebuilt deferred, after the screen list settles).
+	main_screen->connect("screens_changed", callable_mp(this, &StrataDocumentTabs::_queue_rebuild));
 	scene_tabs->get_tab_bar()->connect("tab_clicked", callable_mp(this, &StrataDocumentTabs::_level_clicked));
 }

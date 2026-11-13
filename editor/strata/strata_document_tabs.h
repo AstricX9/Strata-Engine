@@ -53,6 +53,8 @@ public:
 		bool script_dismissed = false;
 		bool marketplace_enabled = true;
 		bool marketplace_open = false;
+		bool game_enabled = true; // Feature profile; false in recovery mode, which has no Game screen.
+		bool game_selected = false; // Game screen opened without playing (Ctrl+F4).
 		bool playing = false;
 		int plugin_screens = 0;
 	};
@@ -87,6 +89,8 @@ public:
 	static Vector<TabEntry> get_visible_tools(const ToolState &p_state);
 	// EditorMainScreen::EDITOR_2D for CanvasItem roots, EDITOR_3D otherwise.
 	static int level_screen(const Node *p_root);
+	// Every main screen except 2D and 3D is shown as a tool tab.
+	static bool is_tool_screen(int p_screen);
 
 	// Puts the tool tabs in the level tab row and keeps them in sync with the main screen.
 	void setup(EditorSceneTabs *p_scene_tabs, EditorMainScreen *p_main_screen);

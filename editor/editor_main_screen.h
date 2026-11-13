@@ -85,6 +85,7 @@ public:
 	// Strata document tabs list every main screen, including ones added by plugins.
 	int get_plugin_count() const { return editor_table.size(); }
 	EditorPlugin *get_plugin_at(int p_index) const { return editor_table[p_index]; }
+	Ref<Texture2D> get_screen_icon(int p_index) const;
 	bool can_auto_switch_screens() const;
 
 	VBoxContainer *get_control() const;

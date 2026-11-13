@@ -208,8 +208,14 @@ void EditorMainScreen::select(int p_index) {
 	emit_signal(SNAME("screen_changed"), p_index);
 }
 
+Ref<Texture2D> EditorMainScreen::get_screen_icon(int p_index) const {
+	ERR_FAIL_INDEX_V(p_index, buttons.size(), Ref<Texture2D>());
+	return buttons[p_index]->get_button_icon();
+}
+
 void EditorMainScreen::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("screen_changed", PropertyInfo(Variant::INT, "index")));
+	ADD_SIGNAL(MethodInfo("screens_changed"));
 }
 
 int EditorMainScreen::get_selected_index() const {
@@ -292,6 +298,7 @@ void EditorMainScreen::add_main_plugin(EditorPlugin *p_editor) {
 	button_hb->add_child(tb);
 	editor_table.push_back(p_editor);
 	main_editor_plugins.insert(p_editor->get_plugin_name(), p_editor);
+	emit_signal(SNAME("screens_changed"));
 }
 
 void EditorMainScreen::remove_main_plugin(EditorPlugin *p_editor) {
@@ -319,6 +326,7 @@ void EditorMainScreen::remove_main_plugin(EditorPlugin *p_editor) {
 
 	editor_table.erase(p_editor);
 	main_editor_plugins.erase(p_editor->get_plugin_name());
+	emit_signal(SNAME("screens_changed"));
 }
 
 EditorMainScreen::EditorMainScreen() {
