@@ -32,6 +32,8 @@
 
 #include "editor/themes/editor_theme_manager.h"
 
+class StyleBoxTexture;
+
 // Strata's own default look: preset values feeding Godot's theme generator, plus overrides applied after it.
 struct StrataThemePreset {
 	Color base_color;
@@ -51,5 +53,7 @@ public:
 	static StrataThemePreset get_default_preset();
 	// Near-black text on light accents, white on dark ones, so primary buttons stay readable with any custom accent.
 	static Color get_primary_button_font_color(const Color &p_accent);
+	// UE4-style shading: a box filled with a vertical gradient from p_top to p_bottom.
+	static Ref<StyleBoxTexture> make_gradient_style(const Color &p_top, const Color &p_bottom);
 	static void populate_overrides(const Ref<EditorTheme> &p_theme, EditorThemeManager::ThemeConfiguration &p_config);
 };
