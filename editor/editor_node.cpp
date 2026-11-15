@@ -147,6 +147,7 @@
 #include "editor/strata/strata_document_tabs.h"
 #include "editor/strata/strata_layout.h"
 #include "editor/strata/strata_toolbar.h"
+#include "editor/strata/strata_window_buttons.h"
 #include "editor/themes/editor_color_map.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
@@ -8241,6 +8242,10 @@ void EditorNode::_update_main_menu_type() {
 	memdelete_notnull(menu_btn_spacer);
 	menu_btn_spacer = nullptr;
 
+	// Strata: with its own title bar the editor keeps the menus in a row of their own, below the tabs (UE4).
+	HBoxContainer *menu_parent = strata_menu_row ? strata_menu_row : (HBoxContainer *)title_bar;
+	const int menu_index = (menu_parent == title_bar && left_menu_spacer) ? left_menu_spacer->get_index() + 1 : 0;
+
 	// Create new menu.
 	if (new_menu_type == MENU_TYPE_COMPACT) {
 		main_menu_button = memnew(MenuButton);
@@ -8262,14 +8267,14 @@ void EditorNode::_update_main_menu_type() {
 		// Align main menu icon visually with TouchActionsPanel buttons.
 		menu_btn_spacer = memnew(Control);
 		menu_btn_spacer->set_custom_minimum_size(Vector2(8, 0) * EDSCALE);
-		title_bar->add_child(menu_btn_spacer);
-		title_bar->move_child(menu_btn_spacer, left_menu_spacer ? left_menu_spacer->get_index() + 1 : 0);
+		menu_parent->add_child(menu_btn_spacer);
+		menu_parent->move_child(menu_btn_spacer, menu_index);
 #endif
-		title_bar->add_child(main_menu_button);
+		menu_parent->add_child(main_menu_button);
 		if (menu_btn_spacer == nullptr) {
-			title_bar->move_child(main_menu_button, left_menu_spacer ? left_menu_spacer->get_index() + 1 : 0);
+			menu_parent->move_child(main_menu_button, menu_index);
 		} else {
-			title_bar->move_child(main_menu_button, menu_btn_spacer->get_index() + 1);
+			menu_parent->move_child(main_menu_button, menu_btn_spacer->get_index() + 1);
 		}
 	} else {
 		main_menu_bar = memnew(MenuBar);
@@ -8286,8 +8291,8 @@ void EditorNode::_update_main_menu_type() {
 			}
 		}
 
-		title_bar->add_child(main_menu_bar);
-		title_bar->move_child(main_menu_bar, left_menu_spacer ? left_menu_spacer->get_index() + 1 : 0);
+		menu_parent->add_child(main_menu_bar);
+		menu_parent->move_child(main_menu_bar, menu_index);
 	}
 
 	// Show/hide project title.
@@ -9049,6 +9054,12 @@ EditorNode::EditorNode() {
 		left_menu_spacer = memnew(Control);
 		left_menu_spacer->set_mouse_filter(Control::MOUSE_FILTER_PASS);
 		title_bar->add_child(left_menu_spacer);
+
+		// Strata (UE4): the title row holds the logo, document tabs and window buttons; menus get a row below.
+		strata_menu_row = memnew(HBoxContainer);
+		strata_menu_row->set_name("StrataMenuRow");
+		main_vbox->add_child(strata_menu_row);
+		main_vbox->move_child(strata_menu_row, title_bar->get_index() + 1);
 	}
 
 	file_menu = memnew(PopupMenu);
@@ -9138,6 +9149,36 @@ EditorNode::EditorNode() {
 		right_menu_spacer = memnew(Control);
 		right_menu_spacer->set_mouse_filter(Control::MOUSE_FILTER_PASS);
 		title_bar->add_child(right_menu_spacer);
+	}
+
+	if (strata_menu_row) {
+		// Title row (UE4): [logo][document tabs ... drag space][minimise maximise close].
+		TextureRect *logo = memnew(TextureRect);
+		logo->set_texture(theme->get_icon(SNAME("TitleBarLogo"), EditorStringName(EditorIcons)));
+		logo->set_stretch_mode(TextureRect::STRETCH_KEEP_CENTERED);
+		logo->set_custom_minimum_size(Size2(32, 0) * EDSCALE);
+		logo->set_mouse_filter(Control::MOUSE_FILTER_PASS);
+		title_bar->add_child(logo);
+		title_bar->move_child(logo, left_menu_spacer->get_index() + 1);
+
+		scene_tabs->get_parent()->remove_child(scene_tabs);
+		title_bar->add_child(scene_tabs);
+		title_bar->move_child(scene_tabs, logo->get_index() + 1);
+		scene_tabs->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+
+		// The centred screen buttons and their spacers are replaced by the tabs.
+		left_spacer->hide();
+		right_spacer->hide();
+
+		// The renderer picker moves to the right end of the menu row.
+		Control *menu_row_spacer = memnew(Control);
+		menu_row_spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+		menu_row_spacer->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+		strata_menu_row->add_child(menu_row_spacer);
+		right_menu_hb->get_parent()->remove_child(right_menu_hb);
+		strata_menu_row->add_child(right_menu_hb);
+
+		title_bar->add_child(memnew(StrataWindowButtons));
 	}
 
 	const String current_renderer_ps = String(GLOBAL_GET("rendering/renderer/rendering_method")).to_lower();

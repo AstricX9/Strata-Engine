@@ -30,6 +30,7 @@
 
 #include "strata_document_tabs.h"
 
+#include "core/input/input_event.h"
 #include "core/object/callable_mp.h"
 #include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
@@ -39,6 +40,8 @@
 #include "editor/settings/editor_feature_profile.h"
 #include "editor/script/script_editor_plugin.h"
 #include "scene/main/canvas_item.h"
+#include "scene/main/window.h"
+#include "servers/display/display_server.h"
 
 Vector<StrataDocumentTabs::TabEntry> StrataDocumentTabs::get_visible_tools(const ToolState &p_state) {
 	Vector<TabEntry> tabs;
@@ -110,6 +113,22 @@ void StrataDocumentTabs::_rebuild() {
 	updating = false;
 	_sync_selection();
 	_queue_fit_levels();
+}
+
+void StrataDocumentTabs::_drag_space_input(const Ref<InputEvent> &p_event) {
+	// With the editor's own title bar, the empty part of the tab row is the window's drag area.
+	const Ref<InputEventMouseButton> mb = p_event;
+	Window *window = get_window();
+	if (mb.is_null() || !mb->is_pressed() || mb->get_button_index() != MouseButton::LEFT || !window ||
+			!DisplayServer::get_singleton()->window_get_flag(DisplayServerEnums::WINDOW_FLAG_EXTEND_TO_TITLE, window->get_window_id())) {
+		return;
+	}
+	if (mb->is_double_click()) {
+		window->set_mode(window->get_mode() == Window::MODE_MAXIMIZED ? Window::MODE_WINDOWED : Window::MODE_MAXIMIZED);
+	} else if (DisplayServer::get_singleton()->has_feature(DisplayServerEnums::FEATURE_WINDOW_DRAG)) {
+		DisplayServer::get_singleton()->window_start_drag(window->get_window_id());
+	}
+	row_spacer->accept_event();
 }
 
 void StrataDocumentTabs::_queue_fit_levels() {
@@ -261,7 +280,8 @@ void StrataDocumentTabs::setup(EditorSceneTabs *p_scene_tabs, EditorMainScreen *
 	// Row: [levels][tool tabs][spacer][+, scene list, ...]. The spacer takes the slack the level strip used to.
 	row_spacer = memnew(Control);
 	row_spacer->set_h_size_flags(SIZE_EXPAND_FILL);
-	row_spacer->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	row_spacer->set_mouse_filter(MOUSE_FILTER_STOP);
+	row_spacer->connect(SceneStringName(gui_input), callable_mp(this, &StrataDocumentTabs::_drag_space_input));
 	scene_tabs->add_after_tabs(row_spacer);
 	scene_tabs->add_after_tabs(this);
 	TabBar *levels = scene_tabs->get_tab_bar();

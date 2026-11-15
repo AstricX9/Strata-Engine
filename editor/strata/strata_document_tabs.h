@@ -85,6 +85,7 @@ private:
 	void _level_clicked(int p_tab);
 	void _queue_fit_levels();
 	void _fit_levels();
+	void _drag_space_input(const Ref<InputEvent> &p_event);
 
 protected:
 	void _notification(int p_what);

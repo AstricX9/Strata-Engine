@@ -307,6 +307,7 @@ private:
 	DockSplitContainer *main_hsplit = nullptr;
 	DockSplitContainer *right_hsplit = nullptr; // Strata: right column beside the centre and Content Browser.
 	VBoxContainer *center_vb_strata = nullptr;
+	HBoxContainer *strata_menu_row = nullptr; // Strata: menus below the title row when the editor draws its own title bar.
 	DockSplitContainer *right_l_vsplit = nullptr;
 	DockSplitContainer *right_r_vsplit = nullptr;
 	DockSplitContainer *center_split = nullptr;
