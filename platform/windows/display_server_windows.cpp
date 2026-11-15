@@ -168,6 +168,35 @@ static int _strata_frame_size(HWND p_hwnd) {
 	return GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 }
 
+// Strata: edges of p_hwnd's monitor that have an auto-hide taskbar (StrataWindowFrame::Edge bits).
+static int _strata_autohide_edges(HWND p_hwnd) {
+	MONITORINFO mi = {};
+	mi.cbSize = sizeof(mi);
+	if (!GetMonitorInfoW(MonitorFromWindow(p_hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
+		return 0;
+	}
+	const struct {
+		UINT abe;
+		int edge;
+	} edges[] = {
+		{ ABE_LEFT, StrataWindowFrame::EDGE_LEFT },
+		{ ABE_TOP, StrataWindowFrame::EDGE_TOP },
+		{ ABE_RIGHT, StrataWindowFrame::EDGE_RIGHT },
+		{ ABE_BOTTOM, StrataWindowFrame::EDGE_BOTTOM },
+	};
+	int result = 0;
+	for (const auto &e : edges) {
+		APPBARDATA abd = {};
+		abd.cbSize = sizeof(abd);
+		abd.uEdge = e.abe;
+		abd.rc = mi.rcMonitor;
+		if (SHAppBarMessage(ABM_GETAUTOHIDEBAREX, &abd)) {
+			result |= e.edge;
+		}
+	}
+	return result;
+}
+
 bool DisplayServerWindows::has_feature(DisplayServerEnums::Feature p_feature) const {
 	switch (p_feature) {
 		case DisplayServerEnums::FEATURE_EXTEND_TO_TITLE: {
@@ -2381,7 +2410,13 @@ void DisplayServerWindows::window_set_position(const Point2i &p_position, Displa
 	const DWORD style = GetWindowLongPtr(wd.hWnd, GWL_STYLE);
 	const DWORD exStyle = GetWindowLongPtr(wd.hWnd, GWL_EXSTYLE);
 
-	AdjustWindowRectEx(&rc, style, false, exStyle);
+	if (wd.extend_to_title && !wd.borderless) {
+		// Strata: no native caption, so the window rect is the client rect plus side and bottom frame only.
+		const Rect2i w = StrataWindowFrame::window_rect_for_client(Rect2i(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top), _strata_frame_size(wd.hWnd));
+		rc = { w.position.x, w.position.y, w.position.x + w.size.x, w.position.y + w.size.y };
+	} else {
+		AdjustWindowRectEx(&rc, style, false, exStyle);
+	}
 	MoveWindow(wd.hWnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
 
 	wd.last_pos = p_position;
@@ -2978,11 +3013,32 @@ void DisplayServerWindows::window_set_flag(DisplayServerEnums::WindowFlags p_fla
 			if (p_enabled && !has_feature(DisplayServerEnums::FEATURE_EXTEND_TO_TITLE)) {
 				return;
 			}
+			if (wd.extend_to_title == p_enabled) {
+				return;
+			}
+			// Keep the client area (what the editor saves and restores) where it is; otherwise the window
+			// would jump up by the caption height and grow, a little more on every restart.
+			const bool keep_client = !wd.fullscreen && !wd.borderless && !IsZoomed(wd.hWnd) && !IsIconic(wd.hWnd);
+			RECT client = {};
+			GetClientRect(wd.hWnd, &client);
+			MapWindowPoints(wd.hWnd, HWND_DESKTOP, reinterpret_cast<POINT *>(&client), 2);
+
 			wd.extend_to_title = p_enabled;
 			// A 1px DWM frame keeps the native drop shadow once the caption is gone.
 			const MARGINS margins = { 0, 0, p_enabled ? 1 : 0, 0 };
 			DwmExtendFrameIntoClientArea(wd.hWnd, &margins);
 			SetWindowPos(wd.hWnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+			if (keep_client) {
+				RECT target = client;
+				if (p_enabled) {
+					const Rect2i w = StrataWindowFrame::window_rect_for_client(Rect2i(client.left, client.top, client.right - client.left, client.bottom - client.top), _strata_frame_size(wd.hWnd));
+					target = { w.position.x, w.position.y, w.position.x + w.size.x, w.position.y + w.size.y };
+				} else {
+					AdjustWindowRectEx(&target, GetWindowLongPtr(wd.hWnd, GWL_STYLE), FALSE, GetWindowLongPtr(wd.hWnd, GWL_EXSTYLE));
+				}
+				MoveWindow(wd.hWnd, target.left, target.top, target.right - target.left, target.bottom - target.top, TRUE);
+			}
 		} break;
 		default:
 			break;
@@ -5721,7 +5777,8 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			if (wd.extend_to_title && wParam == TRUE && !wd.fullscreen && !wd.borderless) {
 				NCCALCSIZE_PARAMS *params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
 				RECT &r = params->rgrc[0];
-				const Rect2i client = StrataWindowFrame::client_rect(Rect2i(r.left, r.top, r.right - r.left, r.bottom - r.top), _strata_frame_size(hWnd), IsZoomed(hWnd));
+				const bool zoomed = IsZoomed(hWnd);
+				const Rect2i client = StrataWindowFrame::client_rect(Rect2i(r.left, r.top, r.right - r.left, r.bottom - r.top), _strata_frame_size(hWnd), zoomed, zoomed ? _strata_autohide_edges(hWnd) : 0);
 				r.left = client.position.x;
 				r.top = client.position.y;
 				r.right = client.position.x + client.size.x;

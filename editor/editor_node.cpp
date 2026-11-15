@@ -9055,11 +9055,14 @@ EditorNode::EditorNode() {
 		left_menu_spacer->set_mouse_filter(Control::MOUSE_FILTER_PASS);
 		title_bar->add_child(left_menu_spacer);
 
+#ifdef WINDOWS_ENABLED
 		// Strata (UE4): the title row holds the logo, document tabs and window buttons; menus get a row below.
+		// Windows only for now: macOS keeps its native traffic-light buttons and title layout.
 		strata_menu_row = memnew(HBoxContainer);
 		strata_menu_row->set_name("StrataMenuRow");
 		main_vbox->add_child(strata_menu_row);
 		main_vbox->move_child(strata_menu_row, title_bar->get_index() + 1);
+#endif
 	}
 
 	file_menu = memnew(PopupMenu);

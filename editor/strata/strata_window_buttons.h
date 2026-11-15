@@ -55,6 +55,7 @@ private:
 	Button *_make_button(Action p_action, const String &p_tooltip);
 	void _pressed(int p_action);
 	void _update_toggle();
+	void _stay_last();
 
 protected:
 	void _notification(int p_what);
@@ -62,6 +63,8 @@ protected:
 public:
 	// The middle button maximises a windowed window and restores a maximised one.
 	static Action toggle_action_for(Window::Mode p_mode);
+	// The title row moves the window only when it is windowed or maximised (never in fullscreen).
+	static bool can_drag(Window::Mode p_mode);
 
 	StrataWindowButtons();
 };

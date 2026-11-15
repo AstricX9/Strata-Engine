@@ -40,6 +40,17 @@ StrataWindowButtons::Action StrataWindowButtons::toggle_action_for(Window::Mode 
 	return p_mode == Window::MODE_MAXIMIZED ? ACTION_RESTORE : ACTION_MAXIMIZE;
 }
 
+bool StrataWindowButtons::can_drag(Window::Mode p_mode) {
+	return p_mode == Window::MODE_WINDOWED || p_mode == Window::MODE_MAXIMIZED;
+}
+
+void StrataWindowButtons::_stay_last() {
+	// Plugins add toolbar controls to the title row; the window buttons stay in the corner.
+	if (get_parent() && get_index() != get_parent()->get_child_count() - 1) {
+		get_parent()->move_child(this, -1);
+	}
+}
+
 Button *StrataWindowButtons::_make_button(Action p_action, const String &p_tooltip) {
 	Button *button = memnew(Button);
 	button->set_focus_mode(FOCUS_NONE);
@@ -88,9 +99,11 @@ void StrataWindowButtons::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			get_window()->connect(SNAME("size_changed"), callable_mp(this, &StrataWindowButtons::_update_toggle));
+			get_parent()->connect(SNAME("child_entered_tree"), callable_mp(this, &StrataWindowButtons::_stay_last).unbind(1), CONNECT_DEFERRED);
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
 			get_window()->disconnect(SNAME("size_changed"), callable_mp(this, &StrataWindowButtons::_update_toggle));
+			get_parent()->disconnect(SNAME("child_entered_tree"), callable_mp(this, &StrataWindowButtons::_stay_last));
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
 			minimize_button->set_button_icon(get_editor_theme_icon(SNAME("StrataWindowMinimize")));

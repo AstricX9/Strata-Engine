@@ -31,6 +31,7 @@
 #include "editor_title_bar.h"
 
 #include "core/object/callable_mp.h"
+#include "editor/strata/strata_window_buttons.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "servers/display/display_server.h"
@@ -57,6 +58,9 @@ void EditorTitleBar::gui_input(const Ref<InputEvent> &p_event) {
 	if (mb.is_valid() && has_point(mb->get_position())) {
 		Window *w = Object::cast_to<Window>(get_viewport());
 		if (w) {
+			if (mb->get_button_index() == MouseButton::LEFT && !StrataWindowButtons::can_drag(w->get_mode())) {
+				return; // Strata: never drag a fullscreen editor by its title row.
+			}
 			if (mb->get_button_index() == MouseButton::LEFT) {
 				if (mb->is_pressed()) {
 					if (DisplayServer::get_singleton()->has_feature(DisplayServerEnums::FEATURE_WINDOW_DRAG)) {

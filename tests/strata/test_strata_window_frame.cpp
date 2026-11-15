@@ -57,6 +57,23 @@ TEST_CASE("[Strata][WindowFrame] A maximised window does not hang off the screen
 	CHECK(StrataWindowFrame::client_rect(Rect2i(-8, -8, 1936, 1056), 8, true) == Rect2i(0, 0, 1920, 1040));
 }
 
+TEST_CASE("[Strata][WindowFrame] Turning the title bar off and on keeps the editor where it was") {
+	// The window rect that gives a client rect back; without it the editor creeps up on every restart.
+	const Rect2i client(100, 200, 1000, 700);
+	const Rect2i window = StrataWindowFrame::window_rect_for_client(client, 8);
+	CHECK(window == Rect2i(92, 200, 1016, 708));
+	CHECK(StrataWindowFrame::client_rect(window, 8, false) == client);
+}
+
+TEST_CASE("[Strata][WindowFrame] A maximised editor leaves a pixel for an auto-hide taskbar") {
+	// Covering the whole monitor makes Windows treat the editor as fullscreen and the taskbar never shows.
+	const Rect2i maximised(-8, -8, 1936, 1056);
+	CHECK(StrataWindowFrame::client_rect(maximised, 8, true, StrataWindowFrame::EDGE_BOTTOM) == Rect2i(0, 0, 1920, 1039));
+	CHECK(StrataWindowFrame::client_rect(maximised, 8, true, StrataWindowFrame::EDGE_LEFT) == Rect2i(1, 0, 1919, 1040));
+	// Auto-hide edges only matter when maximised.
+	CHECK(StrataWindowFrame::client_rect(Rect2i(0, 0, 1000, 800), 8, false, StrataWindowFrame::EDGE_BOTTOM) == Rect2i(8, 0, 984, 792));
+}
+
 } // namespace TestStrataWindowFrame
 
 #endif // WINDOWS_ENABLED

@@ -59,13 +59,42 @@ inline Hit hit_test(const Vector2i &p_point, const Vector2i &p_window_size, int 
 	return HIT_TOP;
 }
 
+// Monitor edges that have an auto-hide taskbar (bitmask).
+enum Edge {
+	EDGE_LEFT = 1,
+	EDGE_TOP = 2,
+	EDGE_RIGHT = 4,
+	EDGE_BOTTOM = 8,
+};
+
 // The client rect for a window rect: the native caption (and top frame) removed, side and bottom frame kept.
-// A maximised window's frame lies outside the monitor, so it is inset on every side.
-inline Rect2i client_rect(const Rect2i &p_window_rect, int p_frame, bool p_maximized) {
-	if (p_maximized) {
-		return p_window_rect.grow(-p_frame);
+// A maximised window's frame lies outside the monitor, so it is inset on every side. It also leaves one pixel
+// free on any edge with an auto-hide taskbar; covering the whole monitor makes Windows treat it as fullscreen.
+inline Rect2i client_rect(const Rect2i &p_window_rect, int p_frame, bool p_maximized, int p_autohide_edges = 0) {
+	if (!p_maximized) {
+		return Rect2i(p_window_rect.position.x + p_frame, p_window_rect.position.y, p_window_rect.size.x - p_frame * 2, p_window_rect.size.y - p_frame);
 	}
-	return Rect2i(p_window_rect.position.x + p_frame, p_window_rect.position.y, p_window_rect.size.x - p_frame * 2, p_window_rect.size.y - p_frame);
+	Rect2i r = p_window_rect.grow(-p_frame);
+	if (p_autohide_edges & EDGE_LEFT) {
+		r.position.x += 1;
+		r.size.x -= 1;
+	}
+	if (p_autohide_edges & EDGE_TOP) {
+		r.position.y += 1;
+		r.size.y -= 1;
+	}
+	if (p_autohide_edges & EDGE_RIGHT) {
+		r.size.x -= 1;
+	}
+	if (p_autohide_edges & EDGE_BOTTOM) {
+		r.size.y -= 1;
+	}
+	return r;
+}
+
+// The (non-maximised) window rect whose client rect is p_client: the inverse of client_rect.
+inline Rect2i window_rect_for_client(const Rect2i &p_client, int p_frame) {
+	return Rect2i(p_client.position.x - p_frame, p_client.position.y, p_client.size.x + p_frame * 2, p_client.size.y + p_frame);
 }
 
 } // namespace StrataWindowFrame

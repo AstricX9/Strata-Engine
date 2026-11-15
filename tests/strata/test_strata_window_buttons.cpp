@@ -43,6 +43,14 @@ TEST_CASE("[Strata][WindowButtons] The middle button maximises or restores") {
 	CHECK(StrataWindowButtons::toggle_action_for(Window::MODE_MAXIMIZED) == StrataWindowButtons::ACTION_RESTORE);
 }
 
+TEST_CASE("[Strata][WindowButtons] The title row only drags a windowed or maximised editor") {
+	CHECK(StrataWindowButtons::can_drag(Window::MODE_WINDOWED));
+	CHECK(StrataWindowButtons::can_drag(Window::MODE_MAXIMIZED));
+	CHECK_FALSE(StrataWindowButtons::can_drag(Window::MODE_FULLSCREEN));
+	CHECK_FALSE(StrataWindowButtons::can_drag(Window::MODE_EXCLUSIVE_FULLSCREEN));
+	CHECK_FALSE(StrataWindowButtons::can_drag(Window::MODE_MINIMIZED));
+}
+
 } // namespace TestStrataWindowButtons
 
 #endif // TOOLS_ENABLED

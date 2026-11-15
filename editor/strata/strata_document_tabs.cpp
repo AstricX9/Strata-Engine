@@ -38,6 +38,7 @@
 #include "editor/run/editor_run_bar.h"
 #include "editor/scene/editor_scene_tabs.h"
 #include "editor/settings/editor_feature_profile.h"
+#include "editor/strata/strata_window_buttons.h"
 #include "editor/script/script_editor_plugin.h"
 #include "scene/main/canvas_item.h"
 #include "scene/main/window.h"
@@ -122,6 +123,9 @@ void StrataDocumentTabs::_drag_space_input(const Ref<InputEvent> &p_event) {
 	if (mb.is_null() || !mb->is_pressed() || mb->get_button_index() != MouseButton::LEFT || !window ||
 			!DisplayServer::get_singleton()->window_get_flag(DisplayServerEnums::WINDOW_FLAG_EXTEND_TO_TITLE, window->get_window_id())) {
 		return;
+	}
+	if (!StrataWindowButtons::can_drag(window->get_mode())) {
+		return; // Fullscreen: the title row must not move or resize the window.
 	}
 	if (mb->is_double_click()) {
 		window->set_mode(window->get_mode() == Window::MODE_MAXIMIZED ? Window::MODE_WINDOWED : Window::MODE_MAXIMIZED);
