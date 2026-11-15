@@ -305,6 +305,7 @@ class DisplayServerWindows : public DisplayServer {
 		bool fullscreen = false;
 		bool multiwindow_fs = false;
 		bool borderless = false;
+		bool extend_to_title = false; // Strata: the editor draws its own title row.
 		bool resizable = true;
 		bool no_min_btn = false;
 		bool no_max_btn = false;

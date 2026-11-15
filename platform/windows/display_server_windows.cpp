@@ -34,6 +34,7 @@
 #include "key_mapping_windows.h"
 #include "native_menu_windows.h"
 #include "os_windows.h"
+#include "strata_window_frame.h"
 #include "tts_windows.h"
 #include "wgl_detect_version.h"
 #include "winrt_utils.h"
@@ -74,6 +75,7 @@
 
 #include <avrt.h>
 #include <dwmapi.h>
+#include <windowsx.h>
 #include <propkey.h>
 #include <propvarutil.h>
 #include <shellapi.h>
@@ -160,8 +162,19 @@ static void update_ime_form_positions(HIMC p_himc, const Point2i &p_pos) {
 	ImmSetCandidateWindow(p_himc, &cf);
 }
 
+// Strata: DPI-scaled thickness of the resizable window frame (also the overhang of a maximised window).
+static int _strata_frame_size(HWND p_hwnd) {
+	const UINT dpi = GetDpiForWindow(p_hwnd);
+	return GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+}
+
 bool DisplayServerWindows::has_feature(DisplayServerEnums::Feature p_feature) const {
 	switch (p_feature) {
+		case DisplayServerEnums::FEATURE_EXTEND_TO_TITLE: {
+			// Strata: only the editor itself draws its own title row (it supplies window buttons).
+			// Games and the Project Manager keep the native title bar, as before.
+			return Engine::get_singleton()->is_editor_hint() && !Engine::get_singleton()->is_project_manager_hint();
+		}
 #ifndef DISABLE_DEPRECATED
 		case DisplayServerEnums::FEATURE_GLOBAL_MENU: {
 			return (native_menu && native_menu->has_feature(NativeMenu::FEATURE_GLOBAL_MENU));
@@ -2961,6 +2974,16 @@ void DisplayServerWindows::window_set_flag(DisplayServerEnums::WindowFlags p_fla
 			}
 			wd.is_popup = p_enabled;
 		} break;
+		case DisplayServerEnums::WINDOW_FLAG_EXTEND_TO_TITLE: {
+			if (p_enabled && !has_feature(DisplayServerEnums::FEATURE_EXTEND_TO_TITLE)) {
+				return;
+			}
+			wd.extend_to_title = p_enabled;
+			// A 1px DWM frame keeps the native drop shadow once the caption is gone.
+			const MARGINS margins = { 0, 0, p_enabled ? 1 : 0, 0 };
+			DwmExtendFrameIntoClientArea(wd.hWnd, &margins);
+			SetWindowPos(wd.hWnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+		} break;
 		default:
 			break;
 	}
@@ -3004,6 +3027,9 @@ bool DisplayServerWindows::window_get_flag(DisplayServerEnums::WindowFlags p_fla
 		} break;
 		case DisplayServerEnums::WINDOW_FLAG_POPUP: {
 			return wd.is_popup;
+		} break;
+		case DisplayServerEnums::WINDOW_FLAG_EXTEND_TO_TITLE: {
+			return wd.extend_to_title;
 		} break;
 		default:
 			break;
@@ -5689,9 +5715,44 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				SendMessageW(windows[window_id].hWnd, WM_PAINT, 0, 0);
 			}
 		} break;
+		case WM_NCCALCSIZE: {
+			// Strata: remove the native caption, keep the side and bottom frame (resize edges, shadow, snap).
+			const WindowData &wd = windows[window_id];
+			if (wd.extend_to_title && wParam == TRUE && !wd.fullscreen && !wd.borderless) {
+				NCCALCSIZE_PARAMS *params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+				RECT &r = params->rgrc[0];
+				const Rect2i client = StrataWindowFrame::client_rect(Rect2i(r.left, r.top, r.right - r.left, r.bottom - r.top), _strata_frame_size(hWnd), IsZoomed(hWnd));
+				r.left = client.position.x;
+				r.top = client.position.y;
+				r.right = client.position.x + client.size.x;
+				r.bottom = client.position.y + client.size.y;
+				return 0;
+			}
+		} break;
 		case WM_NCHITTEST: {
 			if (windows[window_id].mpass) {
 				return HTTRANSPARENT;
+			}
+			const WindowData &wd = windows[window_id];
+			if (wd.extend_to_title && !wd.fullscreen && !wd.borderless) {
+				// Sides and bottom are still native frame; the top edge is inside the client area now.
+				const LRESULT native = DefWindowProcW(hWnd, uMsg, wParam, lParam);
+				if (native != HTCLIENT) {
+					return native;
+				}
+				RECT wr;
+				GetWindowRect(hWnd, &wr);
+				const Vector2i point(GET_X_LPARAM(lParam) - wr.left, GET_Y_LPARAM(lParam) - wr.top);
+				switch (StrataWindowFrame::hit_test(point, Vector2i(wr.right - wr.left, wr.bottom - wr.top), _strata_frame_size(hWnd), IsZoomed(hWnd))) {
+					case StrataWindowFrame::HIT_TOP:
+						return HTTOP;
+					case StrataWindowFrame::HIT_TOP_LEFT:
+						return HTTOPLEFT;
+					case StrataWindowFrame::HIT_TOP_RIGHT:
+						return HTTOPRIGHT;
+					case StrataWindowFrame::HIT_CLIENT:
+						return HTCLIENT;
+				}
 			}
 		} break;
 		case WM_MOUSEACTIVATE: {
